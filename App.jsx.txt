@@ -1,0 +1,275 @@
+// [BLOCO 1] IMPORTS E CONSTANTES
+import React, { useState } from 'react';
+import { 
+  LayoutDashboard, Calculator, Globe, Mail, ShoppingCart, AlertTriangle, 
+  Settings, CheckCircle, XCircle 
+} from 'lucide-react';
+
+const RUBRIC_ITEMS = [
+  { id: 1, type: 'Técnica', text: 'Realizou o cálculo correto do MRP (PP e EMax)' },
+  { id: 2, type: 'Técnica', text: 'Selecionou fornecedor homologado e avaliou IQF' },
+  { id: 3, type: 'Socioemocional', text: 'Demonstrou comunicação clara e negociou TCA' },
+  { id: 4, type: 'Técnica', text: 'Preencheu o PO com Incoterm e Modal adequados' },
+  { id: 5, type: 'Técnica', text: 'Elaborou plano 5W2H estruturado para contingência' }
+];
+
+const INITIAL_SUPPLIERS = [
+  { id: 1, name: 'Cacau Global Corp', origin: 'Internacional', iqf: 95, status: 'Homologado' },
+  { id: 2, name: 'Vale Lácteos S/A', origin: 'Nacional', iqf: 82, status: 'Pendente' }
+];
+
+const INITIAL_STUDENTS = [
+  { id: 1, name: 'Bancada 01' },
+  { id: 2, name: 'Bancada 02' }
+];
+
+// [BLOCO 2] COMPONENTE PRINCIPAL E ESTADOS
+export default function App() {
+  const [currentTab, setCurrentTab] = useState(1);
+  const [isMissionControlOpen, setIsMissionControlOpen] = useState(false);
+  
+  // Estados de Dados da Simulação
+  const [kpis, setKpis] = useState({ budget: 150000, saving: 0, serviceLevel: 98, occupation: 45 });
+  const [mrpData, setMrpData] = useState({ cm: 100, lt: 5, emin: 200, lote: 1000 });
+  const [exchangeRate, setExchangeRate] = useState({ usd: 5.10, eur: 5.45 });
+  const [evaluation, setEvaluation] = useState({});
+
+  // [BLOCO 3] FUNÇÕES DE CÁLCULO E REGRAS DE NEGÓCIO
+  const pp = (mrpData.cm * mrpData.lt) + mrpData.emin;
+  const emax = mrpData.emin + mrpData.lote;
+
+  const calculateRubricScore = () => {
+    const total = RUBRIC_ITEMS.length;
+    const attended = Object.values(evaluation).filter(v => v === 'A').length;
+    const percentage = Math.round((attended / total) * 100) || 0;
+    
+    let level = 1;
+    if (percentage > 20) level = 2;
+    if (percentage > 40) level = 3;
+    if (percentage > 60) level = 4;
+    if (percentage > 80) level = 5;
+    if (percentage === 100) level = 6;
+    
+    return { percentage, level, grade: percentage };
+  };
+
+  const handleRubricChange = (itemId, value) => {
+    setEvaluation(prev => ({ ...prev, [itemId]: value }));
+  };
+
+  // [BLOCO 4] COMPONENTES DE ABAS (TABS)
+  const renderDashboard = () => (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-slate-800">Dashboard de Suprimentos</h2>
+      <div className="grid grid-cols-4 gap-4">
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+          <p className="text-sm text-slate-500">Orçamento Disponível</p>
+          <p className="text-2xl font-bold text-emerald-600">R$ {kpis.budget.toLocaleString()}</p>
+        </div>
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+          <p className="text-sm text-slate-500">Saving Acumulado</p>
+          <p className="text-2xl font-bold text-blue-600">R$ {kpis.saving.toLocaleString()}</p>
+        </div>
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+          <p className="text-sm text-slate-500">Nível de Serviço</p>
+          <p className="text-2xl font-bold text-slate-800">{kpis.serviceLevel}%</p>
+        </div>
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+          <p className="text-sm text-slate-500">Ocupação do Armazém</p>
+          <p className="text-2xl font-bold text-amber-600">{kpis.occupation}%</p>
+        </div>
+      </div>
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+        <h3 className="font-semibold text-slate-800 mb-4">Trilha de Aprendizagem</h3>
+        <div className="flex justify-between text-sm text-slate-500">
+          <span>1. Planejamento (MRP)</span>
+          <span>2. Homologação</span>
+          <span>3. Negociação (TCA)</span>
+          <span>4. Emissão de PO</span>
+          <span>5. Recebimento</span>
+        </div>
+        <div className="w-full bg-slate-100 h-2 mt-2 rounded-full overflow-hidden">
+          <div className="bg-emerald-500 h-full w-1/5"></div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderMRP = () => (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-slate-800">Cálculo MRP e Dente de Serra</h2>
+      <div className="grid grid-cols-2 gap-6">
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
+          <h3 className="font-semibold text-slate-800">Parâmetros de Estoque</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm text-slate-600">Consumo Médio (CM)</label>
+              <input type="number" className="w-full border rounded p-2 mt-1" value={mrpData.cm} onChange={e => setMrpData({...mrpData, cm: Number(e.target.value)})} />
+            </div>
+            <div>
+              <label className="block text-sm text-slate-600">Lead Time (Dias)</label>
+              <input type="number" className="w-full border rounded p-2 mt-1" value={mrpData.lt} onChange={e => setMrpData({...mrpData, lt: Number(e.target.value)})} />
+            </div>
+            <div>
+              <label className="block text-sm text-slate-600">Estoque Mínimo (EMin)</label>
+              <input type="number" className="w-full border rounded p-2 mt-1" value={mrpData.emin} onChange={e => setMrpData({...mrpData, emin: Number(e.target.value)})} />
+            </div>
+            <div>
+              <label className="block text-sm text-slate-600">Lote de Compra (Q)</label>
+              <input type="number" className="w-full border rounded p-2 mt-1" value={mrpData.lote} onChange={e => setMrpData({...mrpData, lote: Number(e.target.value)})} />
+            </div>
+          </div>
+          <div className="bg-slate-50 p-4 rounded mt-4 border border-slate-200">
+            <p className="text-lg">Ponto de Pedido (PP): <strong className="text-emerald-600">{pp} und</strong></p>
+            <p className="text-lg">Estoque Máximo (EMax): <strong className="text-blue-600">{emax} und</strong></p>
+          </div>
+        </div>
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+          <h3 className="font-semibold text-slate-800 mb-4">Gráfico Dente de Serra</h3>
+          <svg viewBox="0 0 400 250" className="w-full h-auto bg-slate-50 rounded border border-slate-200">
+            {/* Eixos */}
+            <line x1="40" y1="20" x2="40" y2="220" stroke="black" strokeWidth="2" />
+            <line x1="40" y1="220" x2="380" y2="220" stroke="black" strokeWidth="2" />
+            
+            {/* Faixa Estoque Mínimo (Vermelho) */}
+            <rect x="40" y="180" width="340" height="40" fill="#fee2e2" opacity="0.5" />
+            <line x1="40" y1="180" x2="380" y2="180" stroke="#ef4444" strokeWidth="2" strokeDasharray="4" />
+            <text x="5" y="185" fontSize="10" fill="#ef4444">EMin</text>
+
+            {/* Linha Estoque Máximo (Azul) */}
+            <line x1="40" y1="40" x2="380" y2="40" stroke="#3b82f6" strokeWidth="2" strokeDasharray="4" />
+            <text x="5" y="45" fontSize="10" fill="#3b82f6">EMax</text>
+
+            {/* Linha Ponto de Pedido (Verde) */}
+            <line x1="40" y1="130" x2="380" y2="130" stroke="#10b981" strokeWidth="2" strokeDasharray="4" />
+            <text x="5" y="135" fontSize="10" fill="#10b981">PP</text>
+
+            {/* Curva de Consumo (Preto) e Reposição (Verde) */}
+            <polyline points="40,40 160,180" fill="none" stroke="black" strokeWidth="2" />
+            <line x1="160" y1="180" x2="160" y2="40" stroke="#10b981" strokeWidth="2" />
+            <polyline points="160,40 280,180" fill="none" stroke="black" strokeWidth="2" />
+            <line x1="280" y1="180" x2="280" y2="40" stroke="#10b981" strokeWidth="2" />
+          </svg>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Demais abas simplificadas para manter o bloco funcional estruturado
+  const renderPlaceholder = (title) => (
+    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+      <h2 className="text-2xl font-bold text-slate-800 mb-4">{title}</h2>
+      <p className="text-slate-500">Módulo em operação. A integração de fluxos será carregada aqui.</p>
+    </div>
+  );
+
+  // [BLOCO 5] MISSION CONTROL (PAINEL DO DOCENTE)
+  const renderMissionControl = () => {
+    const { percentage, level, grade } = calculateRubricScore();
+    return (
+      <div className="fixed inset-y-0 right-0 w-[500px] bg-slate-800 text-white shadow-2xl p-6 overflow-y-auto z-50">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-emerald-400">Mission Control</h2>
+          <button onClick={() => setIsMissionControlOpen(false)} className="text-slate-400 hover:text-white">
+            <XCircle size={24} />
+          </button>
+        </div>
+
+        <div className="space-y-6">
+          <div className="bg-slate-700 p-4 rounded-xl border border-slate-600">
+            <h3 className="font-semibold mb-3">Controle Global</h3>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <label className="text-slate-400">Câmbio Dólar (USD)</label>
+                <input type="number" className="w-full bg-slate-800 border-slate-600 rounded p-1 mt-1 text-white" value={exchangeRate.usd} onChange={e => setExchangeRate({...exchangeRate, usd: e.target.value})} />
+              </div>
+              <div>
+                <label className="text-slate-400">Câmbio Euro (EUR)</label>
+                <input type="number" className="w-full bg-slate-800 border-slate-600 rounded p-1 mt-1 text-white" value={exchangeRate.eur} onChange={e => setExchangeRate({...exchangeRate, eur: e.target.value})} />
+              </div>
+            </div>
+            <div className="mt-4 flex gap-2">
+              <button className="bg-amber-600 hover:bg-amber-700 px-3 py-2 rounded flex-1 text-sm font-semibold">Injetar Crise (Atraso)</button>
+              <button className="bg-purple-600 hover:bg-purple-700 px-3 py-2 rounded flex-1 text-sm font-semibold">Desafio Bônus</button>
+            </div>
+          </div>
+
+          <div className="bg-slate-700 p-4 rounded-xl border border-slate-600">
+            <h3 className="font-semibold mb-3">Ficha de Avaliação Oficial</h3>
+            <div className="space-y-2">
+              {RUBRIC_ITEMS.map(item => (
+                <div key={item.id} className="flex items-center justify-between text-sm bg-slate-800 p-2 rounded">
+                  <span className="flex-1 pr-2">{item.text}</span>
+                  <div className="flex gap-1">
+                    <button onClick={() => handleRubricChange(item.id, 'A')} className={`px-2 py-1 rounded ${evaluation[item.id] === 'A' ? 'bg-emerald-600 text-white' : 'bg-slate-600 text-slate-300'}`}>A</button>
+                    <button onClick={() => handleRubricChange(item.id, 'N')} className={`px-2 py-1 rounded ${evaluation[item.id] === 'N' ? 'bg-red-600 text-white' : 'bg-slate-600 text-slate-300'}`}>N</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 p-3 bg-slate-900 rounded border border-slate-600 text-center">
+              <p className="text-sm text-slate-400">Desempenho Geral</p>
+              <p className="text-2xl font-bold text-emerald-400">{percentage}% (Nível {level})</p>
+              <p className="text-xs text-slate-500 mt-1">Nota Sugerida: {grade}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // [BLOCO 6] RENDERIZAÇÃO PRINCIPAL (LAYOUT SAAS)
+  const menuItems = [
+    { id: 1, label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
+    { id: 2, label: 'Calculadora MRP', icon: <Calculator size={20} /> },
+    { id: 3, label: 'Homologação', icon: <Globe size={20} /> },
+    { id: 4, label: 'Webmail & Cotações', icon: <Mail size={20} /> },
+    { id: 5, label: 'Pedidos (PO)', icon: <ShoppingCart size={20} /> },
+    { id: 6, label: 'Plano & Contingência', icon: <AlertTriangle size={20} /> }
+  ];
+
+  return (
+    <div className="min-h-screen bg-slate-100 flex font-sans text-slate-800">
+      {/* Sidebar Lateral */}
+      <div className="w-64 bg-white border-r border-slate-200 flex flex-col shadow-sm z-10">
+        <div className="p-6 border-b border-slate-200">
+          <h1 className="text-xl font-bold text-emerald-700">NutriVita ERP</h1>
+          <p className="text-xs text-slate-500 font-medium">Módulo de Suprimentos</p>
+        </div>
+        <nav className="flex-1 p-4 space-y-2">
+          {menuItems.map(item => (
+            <button
+              key={item.id}
+              onClick={() => setCurrentTab(item.id)}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${currentTab === item.id ? 'bg-emerald-50 text-emerald-700 font-semibold' : 'text-slate-600 hover:bg-slate-50'}`}
+            >
+              {item.icon}
+              {item.label}
+            </button>
+          ))}
+        </nav>
+        <div className="p-4 border-t border-slate-200">
+          <button 
+            onClick={() => setIsMissionControlOpen(true)}
+            className="w-full flex items-center justify-center gap-2 bg-slate-800 text-white px-4 py-2 rounded-lg hover:bg-slate-700 transition-colors text-sm font-semibold"
+          >
+            <Settings size={16} /> Mission Control
+          </button>
+        </div>
+      </div>
+
+      {/* Área Principal */}
+      <div className="flex-1 p-8 overflow-y-auto">
+        {currentTab === 1 && renderDashboard()}
+        {currentTab === 2 && renderMRP()}
+        {currentTab === 3 && renderPlaceholder('Homologação Global')}
+        {currentTab === 4 && renderPlaceholder('Webmail e Quadro TCA')}
+        {currentTab === 5 && renderPlaceholder('Emissão de Pedidos (PO)')}
+        {currentTab === 6 && renderPlaceholder('Contingência (5W2H)')}
+      </div>
+
+      {/* Sobreposição do Painel do Professor */}
+      {isMissionControlOpen && renderMissionControl()}
+    </div>
+  );
+}
