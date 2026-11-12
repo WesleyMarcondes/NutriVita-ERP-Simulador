@@ -1,40 +1,62 @@
-# NutriVita-ERP-Simulador
-Simulador educacional de ERP para Suprimentos e Logística. Desenvolvido em React e Tailwind CSS para simular o ciclo completo de compras, MRP e gestão de estoque.
+# NutriVita Foods ERP - Simulador Educacional de Suprimentos & Logística
 
-O NutriVita Foods ERP é uma aplicação web imersiva (SaaS) construída para fins educacionais. O sistema simula a rotina de um departamento de Suprimentos, permitindo que estudantes de Logística vivenciem na prática o planejamento de materiais (Gráfico Dente de Serra/MRP), homologação de fornecedores, negociação de preços (TCA), emissão de Pedidos de Compra (PO) e elaboração de planos de ação (5W2H). Inclui um painel exclusivo "Mission Control" para o professor injetar crises, gerenciar câmbio e avaliar a turma em tempo real.
+Simulador educacional de ERP corporativo para o ensino prático de Suprimentos, Logística Integrada e Planejamento de Materiais (MRP). Desenvolvido em **React**, **Vite** e **Tailwind CSS**, com versão interativa standalone integrada.
 
-Tags/Topics recomendadas para adicionar ao repositório:react, vite, tailwind-css, logistics, erp-simulator, education, supply-chain, mrp
+---
 
+## 🎯 Visão Geral
+O **NutriVita Foods ERP** simula o cotidiano do departamento de Suprimentos de uma indústria alimentícia localizada em Extrema/MG. Como analista responsável, o estudante vivencia todas as etapas da cadeia de suprimentos:
+1. Recebimento e priorização de Requisições de Compras (RCs).
+2. Cálculo de parâmetros de estoque e geração da curva Dente de Serra no MRP.
+3. Auditoria documental e homologação de fornecedores (IQF) com conformidade técnica.
+4. Negociação corporativa via Webmail com persistência de mensagens e réplicas realistas.
+5. Emissão de Pedido de Compra (PO) com precificação de frete, seguro e Incoterms 2020.
+6. Rastreamento Inbound na Torre de Follow-up com avanço orgânico de 5 marcos e atualização física do estoque fabril.
 
+---
 
-# NutriVita Foods ERP - Simulador Educacional de Suprimentos
+## 🧭 Arquitetura Pedagógica (Módulos da Simulação)
 
-## Visão Geral
-O **NutriVita Foods ERP** é uma aplicação web imersiva (desenvolvida em React, Vite e Tailwind CSS) criada para fins educacionais. O sistema simula o departamento de Suprimentos de uma indústria de alimentos (focada em snacks funcionais, chocolates e bebidas lácteas), permitindo que estudantes de Logística vivenciem o ciclo completo de compras e gestão de estoques.
+* **0. Dossiê Inicial & Onboarding:** Contextualização da fábrica, metas corporativas do trimestre, ciclo de compras e políticas da empresa (SOP).
+* **1. Dashboard & Requisições (RCs):** Monitoramento de KPIs estratégicos (Orçamento, Saving, Nível de Serviço OTIF, Ocupação do Armazém) com modais de letramento técnico e caixa de entrada dinâmica de RCs com trilha pedagógica integrada (16% a 100%).
+* **2. Calculadora MRP & Gráfico Dente de Serra:** Dimensionamento de Consumo Médio ($CM$), Lead Time ($LT$), Estoque Mínimo ($EMin$) e Lote de Reposição ($Q$). Trava técnica que exige a correta interpretação das recomendações conceituais da fábrica para liberar o fluxo.
+* **3. Homologação & Auditoria IQF:** Dossiês legais de fornecedores nacionais e internacionais, auditoria manual por checklist (Alvará, CND, ISO 22000, Saúde Financeira), trava anti-fraude documental e cadastro de novos parceiros.
+* **4. Webmail Corporativo:** Interface inspirada no Outlook corporativo com histórico persistente por thread, cronômetro de resposta humanizado e randômico, badges e notificações multimodulares.
+* **5. Emissão de Pedidos (PO):** Card em destaque do fornecedor homologado, catálogo oficial de insumos com busca em tempo real, cálculo automático de frete e seguro por Incoterm e modal, matriz comparativa Incoterms 2020 e modal de sucesso com protocolo.
+* **6. Torre de Follow-up Inbound:** Rastreamento simultâneo de cargas, linha do tempo com 5 marcos operacionais, cronômetro de trânsito em tempo real, diário de bordo cronológico e gatilho de abastecimento físico do armazém (+12% de ocupação).
 
-## Arquitetura Pedagógica
-O simulador foi desenhado para criar uma **progressão fluida e orgânica**, onde cada passo depende da correta execução do anterior. A jornada do aluno engloba:
-1. **Dashboard:** Monitoramento de KPIs (Orçamento, Saving, Nível de Serviço, Ocupação).
-2. **Cálculo MRP:** Dimensionamento de estoques com Gráfico Dente de Serra interativo.
-3. **Homologação Global:** Avaliação de fornecedores e compliance (Índice de Qualificação - IQF).
-4. **Webmail & Cotações:** Negociação simulada e Quadro de Apuração de Compras (TCA).
-5. **Pedidos (PO) e Follow-up:** Emissão de pedidos, seleção de modais e Incoterms.
-6. **Plano & Contingência:** Estruturação de planos de ação (5W2H) para gestão de crises.
+---
 
-## Mission Control (Visão do Docente)
-O sistema conta com um painel exclusivo para o educador ("Mission Control"), acessível via interface, que permite:
-* Travar e destravar estágios (controle de ritmo da aula).
-* Atualizar taxas de câmbio (Dólar/Euro).
-* Disparar crises e desafios bônus (ex: Desafio Laranja Ugli para negociação integrativa).
-* Avaliar o aluno em tempo real utilizando uma Rubrica de Competências integrada.
+## 👨‍🏫 Mission Control (Painel Docente)
+Painel exclusivo para o educador orquestrar a dinâmica da sala de aula:
+* **Gatilho de Trânsito Inbound:** Avanço manual instantâneo de marcos ou alternância do trânsito automático orgânico (35s).
+* **Injeção de Demandas (RCs) em Tempo Real:** Disparo imediato de requisições de Matéria-Prima (PCP) e Indiretos (MRO) na tela dos alunos.
+* **Mercado de Câmbio:** Gestão de cotações USD/EUR.
+* **Rubrica Oficial de Avaliação:** Acompanhamento do desempenho técnico e socioemocional da turma.
 
-## Tecnologias Utilizadas
-* **Frontend:** React.js
-* **Estilização:** Tailwind CSS
+---
+
+## 🛠️ Tecnologias
+* **Frontend:** React 19, Vite 6, Tailwind CSS 4
 * **Ícones:** Lucide React
-* **Gráficos:** SVG Dinâmico (Nativo)
+* **Gráficos:** SVG Dinâmico Nativo
+* **Distribuição Standalone:** `simulador.html` (executável diretamente em qualquer navegador sem dependências).
 
-## Como Executar
-1. Clone o repositório.
-2. Execute `npm install` para instalar as dependências.
-3. Execute `npm run dev` para iniciar o servidor local.
+---
+
+## 🚀 Como Executar
+
+### Opção 1: Aplicação React / Vite
+```bash
+# Instalar dependências
+npm install
+
+# Iniciar servidor de desenvolvimento
+npm run dev
+
+# Gerar build de produção
+npm run build
+```
+
+### Opção 2: Simulador Standalone Direto
+Basta abrir o arquivo `simulador.html` diretamente em qualquer navegador web moderno.

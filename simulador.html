@@ -1,0 +1,2140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NutriVita Foods ERP - Simulador Corporativo</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.4); border-radius: 9999px; }
+    .custom-scroll::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 0.6); }
+    .badge-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-900 antialiased font-sans min-h-screen flex flex-col m-0 p-0 text-sm">
+
+  <!-- TOAST FLUTUANTE DE NOTIFICAÇÃO LOGÍSTICA (AVANÇO DO FOLLOW-UP) -->
+  <div id="logistics-toast" class="hidden fixed top-5 right-5 bg-white border-2 border-emerald-600 rounded-2xl p-4 shadow-2xl z-50 max-w-sm transition-all transform duration-300">
+    <div class="flex items-start gap-3">
+      <div class="p-2 bg-emerald-100 text-emerald-800 rounded-xl shrink-0 mt-0.5">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <div class="flex-1">
+        <h4 class="font-bold text-slate-900 text-xs uppercase tracking-wide">Atualização Logística Inbound</h4>
+        <p id="logistics-toast-msg" class="text-xs text-slate-700 mt-1 leading-relaxed">Carga avançou no processo de recebimento.</p>
+        <button onclick="goToFollowupFromToast()" class="mt-2 text-xs text-emerald-700 hover:text-emerald-800 font-bold underline block">
+          Ver na Torre de Follow-up →
+        </button>
+      </div>
+      <button onclick="dismissLogisticsToast()" class="text-slate-400 hover:text-slate-600 text-sm">✕</button>
+    </div>
+  </div>
+
+  <!-- HEADER INSTITUCIONAL COM USUÁRIO PERSONALIZADO -->
+  <header class="bg-white border-b border-slate-200 px-6 py-2.5 flex items-center justify-between shadow-xs shrink-0 z-30">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-lg bg-emerald-700 flex items-center justify-center text-white font-black text-lg shadow-sm">N</div>
+      <div>
+        <h1 class="text-base font-bold text-slate-900 leading-tight">NutriVita Foods ERP</h1>
+        <p class="text-xs text-emerald-700 font-semibold">Simulador de Suprimentos & Logística Integrada</p>
+      </div>
+    </div>
+
+    <!-- Indicador Orgânico do Módulo / Tab Ativa -->
+    <div class="hidden md:flex items-center gap-2 px-3.5 py-1.5 bg-slate-100 rounded-full border border-slate-200 text-xs shadow-xs">
+      <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+      <span class="text-slate-500 font-medium">Módulo Atual:</span>
+      <strong id="header-active-tab-title" class="text-slate-800 font-bold">0. Dossiê Inicial</strong>
+    </div>
+
+    <!-- Perfil do Usuário / Analista -->
+    <div class="flex items-center gap-4">
+      <div class="text-right hidden sm:block">
+        <span id="user-display-name" class="font-bold text-slate-800 text-xs block">Wesley Marcondes</span>
+        <span class="text-xs text-slate-500">Analista de Suprimentos Pleno • Matrícula #4829</span>
+      </div>
+      <div class="w-8 h-8 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-800 font-bold flex items-center justify-center text-xs">
+        WM
+      </div>
+      <button onclick="toggleMissionControl(true)" class="bg-slate-800 hover:bg-slate-900 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Mission Control
+      </button>
+    </div>
+  </header>
+
+  <div class="flex-1 flex overflow-hidden">
+    <!-- SIDEBAR DE NAVEGAÇÃO -->
+    <aside class="w-60 bg-white border-r border-slate-200 flex flex-col shrink-0">
+      <div class="p-4 border-b border-slate-100">
+        <span class="text-xs uppercase font-bold text-slate-500 tracking-wider">Módulos da Simulação</span>
+      </div>
+
+      <nav class="flex-1 p-3 space-y-1 overflow-y-auto custom-scroll text-sm">
+        <button onclick="switchTab(0)" id="tab-btn-0" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left font-semibold transition bg-emerald-50 text-emerald-800 relative">
+          <svg class="w-4 h-4 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+          0. Dossiê Inicial
+        </button>
+        <button onclick="switchTab(1)" id="tab-btn-1" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left font-medium transition text-slate-700 hover:bg-slate-50 relative">
+          <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          1. Dashboard & RCs
+        </button>
+        <button onclick="switchTab(2)" id="tab-btn-2" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left font-medium transition text-slate-700 hover:bg-slate-50 relative">
+          <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+          2. Calculadora MRP
+        </button>
+        <button onclick="switchTab(3)" id="tab-btn-3" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left font-medium transition text-slate-700 hover:bg-slate-50 relative">
+          <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          3. Homologação & IQF
+        </button>
+        <button onclick="switchTab(4)" id="tab-btn-4" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left font-medium transition text-slate-700 hover:bg-slate-50 relative">
+          <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+          <span>4. Webmail Corporativo</span>
+          <span id="nav-webmail-badge" class="hidden absolute right-3 w-2 h-2 rounded-full bg-blue-500 animate-ping"></span>
+        </button>
+        <button onclick="switchTab(5)" id="tab-btn-5" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left font-medium transition text-slate-700 hover:bg-slate-50 relative">
+          <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+          5. Emissão de Pedidos (PO)
+        </button>
+        <button onclick="switchTab(6)" id="tab-btn-6" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left font-medium transition text-slate-700 hover:bg-slate-50 relative">
+          <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+          <span>6. Torre de Follow-up</span>
+          <span id="nav-followup-badge" class="hidden absolute right-3 w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+        </button>
+      </nav>
+
+      <div class="p-3 border-t border-slate-200 bg-slate-50 text-xs text-slate-500 text-center">
+        Fábrica Extrema / MG
+      </div>
+    </aside>
+
+    <!-- ÁREA PRINCIPAL -->
+    <main class="flex-1 p-6 md:p-8 overflow-y-auto custom-scroll">
+
+      <!-- TAB 0: DOSSIÊ E INFORMAÇÕES INICIAIS -->
+      <section id="tab-0" class="space-y-6">
+        <div class="bg-gradient-to-r from-emerald-800 to-teal-900 rounded-2xl p-7 text-white shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div class="space-y-2 max-w-2xl">
+            <span class="px-2.5 py-1 bg-white/20 text-emerald-200 text-xs font-bold rounded-md uppercase tracking-wider">Dossiê Corporativo & Onboarding</span>
+            <h2 class="text-2xl font-black">NutriVita Foods S/A - Indústria de Alimentos</h2>
+            <p class="text-sm text-emerald-100 leading-relaxed">
+              Bem-vindo ao departamento de Suprimentos & Planejamento Logístico da fábrica de Extrema/MG. Como analista responsável, sua missão é assegurar o abastecimento ininterrupto das linhas produtivas, garantindo os melhores custos (Saving) e máxima conformidade técnica.
+            </p>
+          </div>
+          <button onclick="switchTab(1)" class="bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-bold px-6 py-3 rounded-xl text-sm transition shadow-lg shrink-0 flex items-center gap-2">
+            Iniciar Turno Operacional →
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+            <div class="flex items-center gap-2 text-emerald-700 font-bold text-sm">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+              Metas do Trimestre
+            </div>
+            <ul class="text-sm text-slate-700 space-y-2">
+              <li class="flex justify-between border-b pb-1.5"><span>Saving Mínimo:</span> <strong class="text-emerald-700">R$ 15.000</strong></li>
+              <li class="flex justify-between border-b pb-1.5"><span>Nível de Serviço (OTIF):</span> <strong class="text-purple-700">&ge; 95%</strong></li>
+              <li class="flex justify-between border-b pb-1.5"><span>Teto Ocupação Armazém:</span> <strong class="text-amber-700">80%</strong></li>
+              <li class="flex justify-between"><span>Budget Total Aprovado:</span> <strong class="text-slate-900">R$ 150.000</strong></li>
+            </ul>
+          </div>
+
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+            <div class="flex items-center gap-2 text-blue-700 font-bold text-sm">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+              Políticas de Compras (SOP)
+            </div>
+            <p class="text-sm text-slate-600 leading-relaxed">
+              1. Todo fornecedor para matérias-primas críticas exige nota <strong>IQF &ge; 75</strong>.<br>
+              2. Compras internacionais com pagamento antecipado exigem cotação de seguro.<br>
+              3. O Ponto de Pedido no MRP deve obedecer rigorosamente à Ficha Técnica da Linha.
+            </p>
+          </div>
+
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+            <div class="flex items-center gap-2 text-purple-700 font-bold text-sm">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+              Ciclo Operacional do Aluno
+            </div>
+            <div class="text-xs text-slate-700 space-y-1.5">
+              <div class="p-2 bg-slate-50 rounded border">1. Analisar Demanda no Dashboard</div>
+              <div class="p-2 bg-slate-50 rounded border">2. Dimensionar Necessidade no MRP</div>
+              <div class="p-2 bg-slate-50 rounded border">3. Homologar & Negociar no Webmail</div>
+              <div class="p-2 bg-slate-50 rounded border">4. Emitir Pedido de Compra (PO)</div>
+              <div class="p-2 bg-slate-50 rounded border">5. Monitorar na Torre de Follow-up</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 1: DASHBOARD & REQUISIÇÕES (RCs COM STATUS DINÂMICO - AJUSTE 2) -->
+      <section id="tab-1" class="hidden space-y-6">
+        <div>
+          <h2 class="text-2xl font-bold text-slate-900">Painel do Analista de Suprimentos</h2>
+          <p class="text-sm text-slate-500">Monitore KPIs corporativos e processe as Requisições de Compras (RCs) pendentes.</p>
+        </div>
+
+        <!-- KPIs com Modais de Letramento -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-white p-5 rounded-xl border border-slate-200 relative shadow-sm">
+            <button onclick="showKpiModal('budget')" class="absolute top-4 right-4 text-slate-400 hover:text-emerald-600 transition" title="Letramento Técnico">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </button>
+            <p class="text-xs font-bold uppercase text-slate-500 tracking-wider">Orçamento Disponível</p>
+            <p id="kpi-budget-val" class="text-2xl font-black text-emerald-700 mt-1">R$ 150.000</p>
+            <span class="text-xs text-slate-400 mt-1 block">Clique no (i) para explicação técnica</span>
+          </div>
+
+          <div class="bg-white p-5 rounded-xl border border-slate-200 relative shadow-sm">
+            <button onclick="showKpiModal('saving')" class="absolute top-4 right-4 text-slate-400 hover:text-blue-600 transition" title="Letramento Técnico">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </button>
+            <p class="text-xs font-bold uppercase text-slate-500 tracking-wider">Saving Acumulado</p>
+            <p id="kpi-saving-val" class="text-2xl font-black text-blue-700 mt-1">R$ 14.500</p>
+            <span class="text-xs text-emerald-700 font-semibold mt-1 block">+9.6% vs baseline inicial</span>
+          </div>
+
+          <div class="bg-white p-5 rounded-xl border border-slate-200 relative shadow-sm">
+            <button onclick="showKpiModal('serviceLevel')" class="absolute top-4 right-4 text-slate-400 hover:text-purple-600 transition" title="Letramento Técnico">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </button>
+            <p class="text-xs font-bold uppercase text-slate-500 tracking-wider">Nível de Serviço (OTIF)</p>
+            <p id="kpi-otif-val" class="text-2xl font-black text-purple-700 mt-1">98%</p>
+            <span class="text-xs text-slate-400 mt-1 block">Meta corporativa: &ge; 95%</span>
+          </div>
+
+          <div class="bg-white p-5 rounded-xl border border-slate-200 relative shadow-sm">
+            <button onclick="showKpiModal('occupation')" class="absolute top-4 right-4 text-slate-400 hover:text-amber-600 transition" title="Letramento Técnico">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </button>
+            <p class="text-xs font-bold uppercase text-slate-500 tracking-wider">Ocupação do Armazém</p>
+            <p id="kpi-occupation-val" class="text-2xl font-black text-amber-700 mt-1">45%</p>
+            <span class="text-xs text-slate-400 mt-1 block">Atualização via Portaria & CQ</span>
+          </div>
+        </div>
+
+        <!-- Trilha de Aprendizagem com Contador Dinâmico de Estágio -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+          <div class="flex justify-between items-center">
+            <h3 class="font-bold text-slate-900 text-sm">Trilha de Aprendizagem de Suprimentos</h3>
+            <span id="trail-progress-text" class="text-xs font-bold px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full">
+              Estágio 1 de 6 Concluído
+            </span>
+          </div>
+          <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+            <div id="trail-progress-bar" class="bg-emerald-600 h-full w-1/6 transition-all duration-500 rounded-full"></div>
+          </div>
+        </div>
+
+        <!-- Caixa de Entrada de RCs com Renderização Dinâmica e Atualização de Status -->
+        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+          <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+            <div>
+              <h3 class="font-bold text-slate-900 text-base">Caixa de Entrada de Requisições de Compras (RCs)</h3>
+              <p class="text-xs text-slate-500">Demandas emitidas pelos departamentos da fábrica para aquisição de materiais.</p>
+            </div>
+            <span id="rc-count-badge" class="px-3 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-full text-xs font-bold">
+              2 Pendentes
+            </span>
+          </div>
+
+          <div id="rc-list" class="divide-y divide-slate-100">
+            <!-- Renderizado dinamicamente via JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: CALCULADORA MRP COM CONTEXTO DINÂMICO DO INSUMO (AJUSTE 3) -->
+      <section id="tab-2" class="hidden space-y-6">
+        <div>
+          <h2 class="text-2xl font-bold text-slate-900">Cálculo MRP e Dimensionamento de Estoque</h2>
+          <p class="text-sm text-slate-500">Leia as diretrizes operacionais do insumo selecionado e preencha os parâmetros. O gráfico responde em tempo real.</p>
+        </div>
+
+        <!-- Card de Diretrizes Operacionais Dinâmico (Altera conforme RC selecionada) -->
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 shadow-xs space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              <h3 id="mrp-active-item-title" class="font-bold text-blue-900 text-sm">Diretrizes da Linha: RC-101 • Massa de Cacau Fina 100% (PCP)</h3>
+            </div>
+            <span id="mrp-active-unit-badge" class="text-xs font-bold px-2.5 py-0.5 rounded bg-blue-200/70 text-blue-900">Unidade: kg</span>
+          </div>
+
+          <p id="mrp-active-desc" class="text-sm text-blue-900 leading-relaxed">
+            O departamento de Planejamento e Controle da Produção (PCP) reporta os dados diários de consumo para a fabricação da linha de barras proteicas:
+          </p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+            <div class="bg-white p-3 rounded-lg border border-blue-200 flex justify-between items-center shadow-xs">
+              <div>
+                <span class="text-slate-600 block font-medium">Consumo Médio da Linha:</span>
+                <span class="text-xs text-slate-400">Demanda contínua para produção</span>
+              </div>
+              <strong id="mrp-disp-cm-ref" class="text-blue-800 text-base">100 kg / dia</strong>
+            </div>
+            <div class="bg-white p-3 rounded-lg border border-blue-200 flex justify-between items-center shadow-xs">
+              <div>
+                <span class="text-slate-600 block font-medium">Lead Time Logístico Médio:</span>
+                <span class="text-xs text-slate-400">Tempo estimado de entrega do lote</span>
+              </div>
+              <strong id="mrp-disp-lt-ref" class="text-blue-800 text-base">5 dias úteis</strong>
+            </div>
+          </div>
+
+          <div id="mrp-recom-box" class="text-xs text-blue-900 bg-blue-100/70 p-3 rounded-lg border border-blue-200 leading-relaxed">
+            📘 <strong>Recomendações Técnicas da NutriVita Foods:</strong><br>
+            • Para resguardar a fábrica contra oscilações de consumo ou atrasos no transporte, o <em>Estoque Mínimo de Segurança (EMin)</em> recomendado equivale à cobertura de <strong>2 dias de produção</strong>.<br>
+            • Para obter condições comerciais favoráveis e otimizar custos de frete, o <em>Lote de Reposição (Q)</em> padrão negociado equivale à cobertura de <strong>10 dias de produção</strong>.
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <!-- Inputs do Aluno -->
+          <div class="lg:col-span-5 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+            <h3 class="font-bold text-slate-900 border-b border-slate-100 pb-2 text-sm">Dimensionamento Técnico de Parâmetros</h3>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Consumo Médio Diário (CM)</label>
+              <input type="number" id="mrp-cm" oninput="onMrpInputChange()" placeholder="Informe o consumo diário" class="w-full bg-white border border-slate-300 rounded p-2 text-sm text-slate-900 font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Lead Time de Espera (LT em dias úteis)</label>
+              <input type="number" id="mrp-lt" oninput="onMrpInputChange()" placeholder="Informe os dias úteis de espera" class="w-full bg-white border border-slate-300 rounded p-2 text-sm text-slate-900 font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Estoque Mínimo de Segurança (EMin)</label>
+              <input type="number" id="mrp-emin" oninput="onMrpInputChange()" placeholder="Informe a quantidade de segurança" class="w-full bg-white border border-slate-300 rounded p-2 text-sm text-slate-900 font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Lote de Reposição (Q)</label>
+              <input type="number" id="mrp-lote" oninput="onMrpInputChange()" placeholder="Informe o lote de compra" class="w-full bg-white border border-slate-300 rounded p-2 text-sm text-slate-900 font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            </div>
+
+            <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-1 text-slate-700">
+              <div class="flex justify-between items-center">
+                <span>Ponto de Pedido Calculado (PP):</span>
+                <strong id="disp-pp" class="text-emerald-700 text-sm font-black">0 un</strong>
+              </div>
+              <div class="flex justify-between items-center">
+                <span>Estoque Máximo Calculado (EMax):</span>
+                <strong id="disp-emax" class="text-blue-700 text-sm font-black">0 un</strong>
+              </div>
+            </div>
+
+            <button onclick="validateAndLockMRP()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 rounded-lg text-xs transition flex items-center justify-center gap-2 shadow-xs">
+              <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Validar Cálculo do MRP
+            </button>
+            <p id="mrp-validation-msg" class="text-xs text-center font-bold"></p>
+          </div>
+
+          <!-- Gráfico Dente de Serra Dinâmico SVG -->
+          <div class="lg:col-span-7 bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h3 class="font-bold text-slate-900 text-sm">Curva Visual Dente de Serra</h3>
+                <p class="text-xs text-slate-400">A curva reage dinamicamente conforme os valores informados</p>
+              </div>
+              <span id="mrp-lock-status" class="text-xs font-bold px-2.5 py-1 bg-amber-100 text-amber-800 rounded">Status: Em dimensionamento</span>
+            </div>
+
+            <div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
+              <svg id="sawtooth-live-svg" viewBox="0 0 400 240" class="w-full h-auto">
+                <line x1="40" y1="20" x2="40" y2="210" stroke="#64748b" stroke-width="2" />
+                <line x1="40" y1="210" x2="380" y2="210" stroke="#64748b" stroke-width="2" />
+                <text x="350" y="230" font-size="11" fill="#64748b" font-weight="bold">Tempo</text>
+
+                <!-- Faixa Estoque Mínimo -->
+                <rect id="svg-emin-rect" x="40" y="160" width="340" height="50" fill="#fee2e2" opacity="0.6" />
+                <line id="svg-emin-line" x1="40" y1="160" x2="380" y2="160" stroke="#ef4444" stroke-width="2" stroke-dasharray="4" />
+                <text id="svg-emin-label" x="5" y="165" font-size="11" fill="#ef4444" font-weight="bold">EMin: 0</text>
+
+                <!-- Linha Ponto de Pedido -->
+                <line id="svg-pp-line" x1="40" y1="110" x2="380" y2="110" stroke="#059669" stroke-width="2" stroke-dasharray="4" />
+                <text id="svg-pp-label" x="10" y="115" font-size="11" fill="#059669" font-weight="bold">PP: 0</text>
+
+                <!-- Linha Estoque Máximo -->
+                <line id="svg-emax-line" x1="40" y1="40" x2="380" y2="40" stroke="#2563eb" stroke-width="2" stroke-dasharray="4" />
+                <text id="svg-emax-label" x="5" y="45" font-size="11" fill="#2563eb" font-weight="bold">EMax: 0</text>
+
+                <!-- Curva de Consumo -->
+                <polyline id="svg-poly-1" points="40,40 170,160" fill="none" stroke="#1e293b" stroke-width="3" />
+                <line id="svg-rep-1" x1="170" y1="160" x2="170" y2="40" stroke="#059669" stroke-width="2" stroke-dasharray="3" />
+                <polyline id="svg-poly-2" points="170,40 300,160" fill="none" stroke="#1e293b" stroke-width="3" />
+                <line id="svg-rep-2" x1="300" y1="160" x2="300" y2="40" stroke="#059669" stroke-width="2" stroke-dasharray="3" />
+              </svg>
+            </div>
+
+            <div class="mt-4 p-3 bg-slate-50 border rounded-lg flex items-center justify-between text-xs">
+              <span id="mrp-next-hint" class="text-slate-600 font-medium">Preencha os valores e clique em validar para liberar a próxima etapa.</span>
+              <button id="btn-next-to-homolog" onclick="goToHomologation()" disabled class="bg-slate-300 text-slate-500 px-4 py-2 rounded-lg font-bold cursor-not-allowed transition">
+                Avançar para Homologação →
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: HOMOLOGAÇÃO & AUDITORIA DE IQF -->
+      <section id="tab-3" class="hidden space-y-6">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900">Homologação & Auditoria de IQF</h2>
+            <p class="text-sm text-slate-500">Selecione um fornecedor homologado para negociar no Webmail ou cadastre e audite novos parceiros.</p>
+          </div>
+          <button onclick="openNewSupplierModal()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center gap-1.5 transition shadow-xs">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            + Cadastrar Novo Fornecedor
+          </button>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+          <table class="w-full text-left text-sm text-slate-700">
+            <thead class="bg-slate-50 text-xs uppercase text-slate-600 font-bold border-b border-slate-200">
+              <tr>
+                <th class="px-5 py-3.5">Fornecedor</th>
+                <th class="px-5 py-3.5">Origem</th>
+                <th class="px-5 py-3.5">Insumo Cadastrado</th>
+                <th class="px-5 py-3.5">IQF</th>
+                <th class="px-5 py-3.5">Status</th>
+                <th class="px-5 py-3.5 text-right">Ações Pedagógicas</th>
+              </tr>
+            </thead>
+            <tbody id="suppliers-tbody" class="divide-y divide-slate-100">
+              <tr class="hover:bg-slate-50 transition">
+                <td class="px-5 py-4 font-semibold text-slate-900">Cacau Global Corp</td>
+                <td class="px-5 py-4 text-xs text-slate-600">Gana (Internacional)</td>
+                <td class="px-5 py-4 text-xs font-medium">Massa de Cacau 100%</td>
+                <td class="px-5 py-4 font-bold text-emerald-700">100 / 100</td>
+                <td class="px-5 py-4"><span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">Homologado</span></td>
+                <td class="px-5 py-4 text-right space-x-2">
+                  <button onclick="openHistoryModal('cacau')" class="bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-bold px-3 py-1.5 rounded transition">Ler Dossiê</button>
+                  <button onclick="selectSupplierAndGoToMail('Cacau Global Corp')" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-3 py-1.5 rounded transition shadow-xs">
+                    Selecionar e Negociar no Webmail →
+                  </button>
+                </td>
+              </tr>
+              <tr class="hover:bg-slate-50 transition">
+                <td class="px-5 py-4 font-semibold text-slate-900">Vale Lácteos S/A</td>
+                <td class="px-5 py-4 text-xs text-slate-600">Minas Gerais (Brasil)</td>
+                <td class="px-5 py-4 text-xs font-medium">Whey Protein Concentrado 80%</td>
+                <td id="vale-iqf-badge" class="px-5 py-4 font-bold text-amber-700">0 / 100</td>
+                <td class="px-5 py-4"><span id="vale-status-badge" class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">Auditoria Pendente</span></td>
+                <td id="cell-actions-vale" class="px-5 py-4 text-right space-x-2">
+                  <button onclick="openHistoryModal('vale')" class="bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-bold px-3 py-1.5 rounded transition">Ler Dossiê</button>
+                  <button onclick="openAuditModal('vale')" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-3 py-1.5 rounded transition shadow-xs">Auditar IQF</button>
+                </td>
+              </tr>
+              <tr class="hover:bg-slate-50 transition">
+                <td class="px-5 py-4 font-semibold text-slate-900">Polipack Embalagens</td>
+                <td class="px-5 py-4 text-xs text-slate-600">São Paulo (Brasil)</td>
+                <td class="px-5 py-4 text-xs font-medium">Filme Stretch 500mm MRO</td>
+                <td class="px-5 py-4 font-bold text-emerald-700">75 / 100</td>
+                <td class="px-5 py-4"><span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">Homologado</span></td>
+                <td class="px-5 py-4 text-right space-x-2">
+                  <button onclick="openHistoryModal('polipack')" class="bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-bold px-3 py-1.5 rounded transition">Ler Dossiê</button>
+                  <button onclick="selectSupplierAndGoToMail('Polipack Embalagens')" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-3 py-1.5 rounded transition shadow-xs">
+                    Selecionar e Negociar no Webmail →
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB 4: WEBMAIL CORPORATIVO -->
+      <section id="tab-4" class="hidden space-y-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900">Webmail Corporativo de Suprimentos</h2>
+            <p class="text-sm text-slate-500">Comunicação corporativa formal: interaja com fornecedores e responda a demandas internas da fábrica.</p>
+          </div>
+          <span class="text-xs bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold px-3 py-1 rounded-full">
+            Servidor Microsoft Exchange Ativo
+          </span>
+        </div>
+
+        <div class="grid grid-cols-12 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden min-h-[560px]">
+          <!-- Sidebar da Caixa de Entrada -->
+          <div class="col-span-12 md:col-span-4 border-r border-slate-200 bg-slate-50 flex flex-col">
+            <div class="p-3.5 border-b border-slate-200 bg-white flex justify-between items-center">
+              <span class="text-xs font-bold uppercase text-slate-600">Mensagens Recebidas</span>
+              <span class="text-xs font-bold text-slate-500">3 E-mails</span>
+            </div>
+            <div class="divide-y divide-slate-200 overflow-y-auto">
+              <!-- E-mail 1 -->
+              <div onclick="selectEmail(1)" id="mail-item-1" class="p-3.5 cursor-pointer bg-emerald-50/90 border-l-4 border-emerald-600">
+                <div class="flex justify-between items-baseline mb-1">
+                  <span class="font-bold text-xs text-slate-900">Cacau Global Corp</span>
+                  <span class="text-xs text-slate-400">10:45</span>
+                </div>
+                <p class="text-xs font-semibold text-slate-800 truncate">Proposta Comercial: Massa de Cacau Fina</p>
+                <p class="text-xs text-slate-500 truncate mt-0.5">Preço FOB US$ 4.20/kg. Aguardamos contraproposta formal...</p>
+              </div>
+
+              <!-- E-mail 2: PCP com botão de gerar RC -->
+              <div onclick="selectEmail(2)" id="mail-item-2" class="p-3.5 cursor-pointer hover:bg-slate-100">
+                <div class="flex justify-between items-baseline mb-1">
+                  <span class="font-bold text-xs text-red-700">PCP - Roberto Lima</span>
+                  <span class="text-xs text-slate-400">11:15</span>
+                </div>
+                <p class="text-xs font-semibold text-slate-800 truncate">URGENTE: Solicitação de Compra de Cacau em Pó</p>
+                <p class="text-xs text-slate-500 truncate mt-0.5">Linha de achocolatados necessita de lote emergencial...</p>
+              </div>
+
+              <!-- E-mail 3 -->
+              <div onclick="selectEmail(3)" id="mail-item-3" class="p-3.5 cursor-pointer hover:bg-slate-100">
+                <div class="flex justify-between items-baseline mb-1">
+                  <span class="font-bold text-xs text-slate-900">Almoxarifado Central</span>
+                  <span class="text-xs text-slate-400">09:30</span>
+                </div>
+                <p class="text-xs font-semibold text-slate-800 truncate">Estoque de Filme Stretch Crítico</p>
+                <p class="text-xs text-slate-500 truncate mt-0.5">Favor providenciar pedido complementar de MRO...</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Área de Leitura & Redação -->
+          <div class="col-span-12 md:col-span-8 p-6 flex flex-col justify-between bg-white">
+            <div>
+              <div class="border-b border-slate-200 pb-3 mb-4">
+                <div class="flex justify-between items-start">
+                  <h3 id="mail-view-subject" class="text-base font-bold text-slate-900">Proposta Comercial: Massa de Cacau Fina</h3>
+                  <div id="btn-create-rc-container" class="hidden">
+                    <button onclick="createRcFromEmail()" class="bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition shadow-xs flex items-center gap-1.5">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                      Gerar Requisição de Compra (RC)
+                    </button>
+                  </div>
+                </div>
+                <div class="text-xs text-slate-600 mt-2 flex flex-col sm:flex-row justify-between gap-1">
+                  <span id="mail-view-from">De: <strong>Jean-Paul Mensah</strong> &lt;comercial@cacauglobal.com&gt;</span>
+                  <span>Para: Wesley Marcondes &lt;compras@nutrivitafoods.com.br&gt;</span>
+                </div>
+              </div>
+
+              <!-- Corpo do E-mail Formal -->
+              <div id="mail-view-body" class="text-sm text-slate-900 leading-relaxed whitespace-pre-line bg-white p-4 rounded-lg border border-slate-200">
+Prezado Analista Wesley Marcondes,
+
+Informamos nossa cotação oficial para o lote de 1.000 kg de Massa de Cacau Fina 100%:
+- Preço Unitário Base: US$ 4.20/kg
+- Modal: Marítimo com Incoterm FOB Porto de Tema (Gana)
+- Lead Time estimado: 5 dias úteis até o desembarque em Santos
+- Condição de pagamento: 30 dias DDL
+
+Caso deseje negociar a alteração do Incoterm para CIF ou desconto para fechamento imediato do pedido, favor responder este e-mail.
+
+Atenciosamente,
+<strong>Jean-Paul Mensah</strong>
+Gerente de Contas Internacionais | Cacau Global Export Corp
+Tema Port Office - Gana | Tel: +233 30 212 3456
+              </div>
+
+              <div id="mail-conversation-history" class="mt-4 space-y-3"></div>
+
+              <div id="mail-typing-indicator" class="hidden mt-3 p-3 bg-white border border-amber-300 rounded-lg text-xs text-amber-900 flex items-center gap-2 shadow-xs">
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping"></span>
+                <span id="mail-typing-text">O fornecedor está analisando sua proposta comercial e calculando as margens...</span>
+              </div>
+            </div>
+
+            <!-- Caixa de Redação -->
+            <div class="mt-6 pt-4 border-t border-slate-200">
+              <label class="block text-xs font-bold text-slate-700 mb-1">
+                Redigir Resposta Corporativa (sua assinatura será anexada automaticamente):
+              </label>
+              <textarea id="mail-reply-text" rows="3" placeholder="Ex: Prezado Jean-Paul, gostaríamos de contrapropor o frete na modalidade CIF ou desconto de 4%..." class="w-full bg-white border border-slate-300 rounded-lg p-3 text-sm text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none"></textarea>
+              <div class="flex justify-between items-center mt-2">
+                <span class="text-xs text-slate-400">Tempo de resposta simulado humanizado (10 a 20 segundos).</span>
+                <button onclick="sendMailReply()" id="btn-send-mail" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-5 py-2 rounded-lg transition flex items-center gap-1.5 shadow-xs">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                  Enviar E-mail Formal
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: EMISSÃO DE PO -->
+      <section id="tab-5" class="hidden space-y-6">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900">Emissão de Pedido de Compra (Purchase Order - PO)</h2>
+            <p class="text-sm text-slate-500">Formalização contratual com seleção de insumos do catálogo oficial e rateio logístico.</p>
+          </div>
+          <button onclick="openIncotermGuide()" class="bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-bold px-3.5 py-2 rounded-lg border border-blue-200 flex items-center gap-1.5 shadow-xs">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Tabela Comparativa de Incoterms 2020
+          </button>
+        </div>
+
+        <!-- Banner com Destaque do Fornecedor -->
+        <div class="bg-white p-5 rounded-xl border-2 border-emerald-600 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-800 font-black text-xl flex items-center justify-center shrink-0">
+              CGC
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 id="po-highlight-name" class="font-bold text-base text-slate-900">Cacau Global Corp</h3>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">Homologado</span>
+              </div>
+              <p id="po-highlight-details" class="text-xs text-slate-600 mt-0.5">
+                CNPJ/Tax ID: <strong>00.123.456/0001-89</strong> • Origem: <strong>Gana (Internacional)</strong> • IQF: <strong>100/100</strong>
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <label class="text-xs font-bold text-slate-600">Trocar Parceiro Comercial:</label>
+            <select id="po-supplier-select" onchange="onSupplierChangeInPO()" class="bg-white border border-slate-300 rounded p-1.5 text-xs font-bold text-slate-800">
+              <option value="Cacau Global Corp">Cacau Global Corp (Gana)</option>
+              <option value="Vale Lácteos S/A">Vale Lácteos S/A (Brasil)</option>
+              <option value="Polipack Embalagens">Polipack Embalagens (Brasil)</option>
+            </select>
+          </div>
+        </div>
+
+        <form onsubmit="handleEmitPO(event)" class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-5">
+          <!-- Catálogo de Itens -->
+          <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+              <span class="text-xs font-bold uppercase text-slate-700 tracking-wider">Catálogo de Itens do Fornecedor (Ordenado de A a Z):</span>
+              <div class="relative w-full sm:w-64">
+                <input type="text" id="catalog-search" oninput="filterCatalogItems()" placeholder="🔍 Buscar insumo ou código SKU..." class="w-full bg-white border border-slate-300 rounded p-1.5 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+              </div>
+            </div>
+
+            <div id="catalog-items-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+              <!-- Renderizado via JS -->
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Item Selecionado</label>
+              <input type="text" id="po-item-selected" value="Massa de Cacau Fina 100%" readonly class="w-full bg-slate-100 border rounded p-2 text-slate-800 font-bold">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Quantidade do Lote (Q)</label>
+              <input type="number" id="po-qty" value="1000" oninput="updatePoCalculations()" class="w-full bg-white border rounded p-2 font-bold text-slate-900">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Preço Base (R$/un)</label>
+              <input type="number" step="0.01" id="po-price" value="21.42" oninput="updatePoCalculations()" class="w-full bg-white border rounded p-2 font-bold text-emerald-700">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Incoterm 2020</label>
+              <select id="po-incoterm" onchange="updatePoCalculations()" class="w-full bg-white border rounded p-2 font-bold text-slate-800">
+                <option value="FOB">FOB (Frete por conta da NutriVita)</option>
+                <option value="CIF">CIF (Frete e Seguro inclusos no preço)</option>
+                <option value="DDP">DDP (Entregue na fábrica com impostos)</option>
+                <option value="EXW">EXW (Retirada na origem)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Modal Logístico</label>
+              <select id="po-modal" onchange="updatePoCalculations()" class="w-full bg-white border rounded p-2 font-bold text-slate-800">
+                <option value="Marítimo">Marítimo (Porta-Contêiner)</option>
+                <option value="Rodoviário">Rodoviário (Caminhão Dedicado)</option>
+                <option value="Aéreo">Aéreo Expresso (Carga Urgente)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Frete Unitário Calculado</label>
+              <input type="text" id="po-disp-freight" value="R$ 3,80 / un" readonly class="w-full bg-slate-100 border rounded p-2 font-bold text-slate-800">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Seguro de Transporte</label>
+              <input type="text" id="po-disp-insurance" value="R$ 0,90 / un" readonly class="w-full bg-slate-100 border rounded p-2 font-bold text-slate-800">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Lead Time Estimado</label>
+              <input type="text" id="po-disp-eta" value="5 dias úteis" readonly class="w-full bg-slate-100 border rounded p-2 font-bold text-blue-700">
+            </div>
+          </div>
+
+          <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div>
+              <span class="text-xs text-slate-600 block">Valor Total da Ordem (Mercadoria + Logística):</span>
+              <p id="po-disp-total" class="text-2xl font-black text-emerald-800">R$ 26.120,00</p>
+            </div>
+            <button type="submit" id="po-submit-btn" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-7 py-3 rounded-xl text-xs transition shadow-xs flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              Transmitir Pedido de Compra (PO)
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- TAB 6: TORRE DE CONTROLE / FOLLOW-UP MULTI-PEDIDOS (AJUSTE 4) -->
+      <section id="tab-6" class="hidden space-y-6">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900">Torre de Controle Inbound & Follow-up Multi-Pedidos</h2>
+            <p class="text-sm text-slate-500">Acompanhamento simultâneo de todas as cargas em trânsito com linha do tempo de 5 marcos operacionais.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-3">
+            <div id="inbound-timer-badge" class="px-3 py-1.5 bg-blue-50 border border-blue-200 text-blue-900 rounded-lg text-xs flex items-center gap-2 shadow-xs">
+              <svg class="w-4 h-4 text-blue-600 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="3" stroke-dasharray="30" stroke-dashoffset="10"/></svg>
+              <span>Trânsito em Andamento: Próximo marco em <strong id="inbound-countdown-display" class="text-blue-700">35s</strong></span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold text-slate-600">Filtrar:</span>
+              <select onchange="filterFollowupOrders(this.value)" class="bg-white border border-slate-300 rounded p-1.5 text-xs font-bold">
+                <option value="todos">Todos os Pedidos</option>
+                <option value="transito">Em Trânsito</option>
+                <option value="concluido">Entregues no Estoque</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div id="followup-orders-list" class="space-y-5">
+          <!-- Pedido 1: Cacau Global -->
+          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b pb-3">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-base text-slate-900">PO #2026-0042 • Cacau Global Corp</span>
+                  <span class="text-xs px-2.5 py-0.5 rounded font-bold bg-blue-100 text-blue-800">FOB Santos • Marítimo</span>
+                </div>
+                <p class="text-xs text-slate-500 mt-0.5">Item: <strong>Massa de Cacau Fina (1.000 kg)</strong> • Transportadora: TransGlobal Logistics</p>
+              </div>
+              <div class="text-right">
+                <span id="order-1-badge" class="text-xs px-3 py-1 bg-amber-100 text-amber-800 font-bold rounded-full">
+                  Marco 1: Despachado Origem
+                </span>
+                <p class="text-xs text-slate-500 mt-1">Previsão ETA: <strong>Em 5 dias úteis</strong></p>
+              </div>
+            </div>
+
+            <!-- Linha do Tempo Realista de 5 Marcos -->
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-2 text-center text-xs">
+              <div id="p1-s1" class="p-3 rounded-xl bg-emerald-100 text-emerald-800 font-bold border-2 border-emerald-500 shadow-xs">
+                1. Despachado Origem
+                <span class="text-xs block font-normal text-emerald-700 mt-0.5">Concluído ✓</span>
+              </div>
+              <div id="p1-s2" class="p-3 rounded-xl bg-slate-50 text-slate-400 border border-slate-200">
+                2. Em Trânsito
+                <span class="text-xs block font-normal mt-0.5">Pendente</span>
+              </div>
+              <div id="p1-s3" class="p-3 rounded-xl bg-slate-50 text-slate-400 border border-slate-200">
+                3. Portaria / Descarga
+                <span class="text-xs block font-normal mt-0.5">Pendente</span>
+              </div>
+              <div id="p1-s4" class="p-3 rounded-xl bg-slate-50 text-slate-400 border border-slate-200">
+                4. Laudo de CQ
+                <span class="text-xs block font-normal mt-0.5">Pendente</span>
+              </div>
+              <div id="p1-s5" class="p-3 rounded-xl bg-slate-50 text-slate-400 border border-slate-200">
+                5. Guardado no Estoque
+                <span class="text-xs block font-normal mt-0.5">Pendente</span>
+              </div>
+            </div>
+
+            <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-700 space-y-2">
+              <div class="flex justify-between items-center font-bold text-slate-700">
+                <span>Diário de Bordo da Carga (Follow-up Notes):</span>
+                <span class="text-slate-400 font-normal">Registro cronológico</span>
+              </div>
+              <div id="order-1-notes" class="space-y-1">
+                <p class="p-2 bg-white rounded border border-slate-200">[Hoje, 10:50] Pedido emitido e transmitido eletronicamente via Webmail ao exportador.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pedido 2: Polipack Embalagens -->
+          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b pb-3">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-base text-slate-900">PO #2026-0038 • Polipack Embalagens</span>
+                  <span class="text-xs px-2.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800">CIF Extrema • Rodoviário</span>
+                </div>
+                <p class="text-xs text-slate-500 mt-0.5">Item: <strong>Filme Stretch Automático 500mm (80 bobinas)</strong> • Transportadora: Rodonaves Express</p>
+              </div>
+              <div class="text-right">
+                <span class="text-xs px-3 py-1 bg-blue-100 text-blue-800 font-bold rounded-full">
+                  Marco 2: Em Trânsito Rodoviário
+                </span>
+                <p class="text-xs text-slate-500 mt-1">Previsão ETA: <strong>Em 2 dias úteis</strong></p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-2 text-center text-xs">
+              <div class="p-3 rounded-xl bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">
+                1. Despachado Origem
+                <span class="text-xs block font-normal text-emerald-600 mt-0.5">Concluído ✓</span>
+              </div>
+              <div class="p-3 rounded-xl bg-emerald-100 text-emerald-800 font-bold border-2 border-emerald-500 shadow-xs">
+                2. Em Trânsito
+                <span class="text-xs block font-normal mt-0.5">Na Rodovia BR-381</span>
+              </div>
+              <div class="p-3 rounded-xl bg-slate-50 text-slate-400 border border-slate-200">
+                3. Portaria / Descarga
+                <span class="text-xs block font-normal mt-0.5">Pendente</span>
+              </div>
+              <div class="p-3 rounded-xl bg-slate-50 text-slate-400 border border-slate-200">
+                4. Laudo de CQ
+                <span class="text-xs block font-normal mt-0.5">Pendente</span>
+              </div>
+              <div class="p-3 rounded-xl bg-slate-50 text-slate-400 border border-slate-200">
+                5. Guardado no Estoque
+                <span class="text-xs block font-normal mt-0.5">Pendente</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODAIS AUXILIARES -->
+  <div id="new-supplier-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-white p-6 rounded-2xl max-w-lg w-full shadow-2xl space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <div>
+          <h3 class="font-bold text-slate-900 text-base">Cadastrar Novo Fornecedor</h3>
+          <p class="text-xs text-slate-500">Insira os dados recebidos via Webmail ou sugeridos pelo PCP</p>
+        </div>
+        <button onclick="closeNewSupplierModal()" class="text-slate-400 hover:text-slate-600 text-lg">✕</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Razão Social / Nome Fantasia</label>
+          <input type="text" id="inp-supp-name" placeholder="Ex: EuroFlavors Aromas BV" class="w-full bg-white border border-slate-300 rounded p-2 text-sm text-slate-900">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">CNPJ / Tax ID Internacional</label>
+            <input type="text" id="inp-supp-cnpj" placeholder="00.000.000/0001-00" class="w-full bg-white border border-slate-300 rounded p-2 text-sm text-slate-900">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Origem</label>
+            <input type="text" id="inp-supp-origin" placeholder="Ex: Holanda (Internacional)" class="w-full bg-white border border-slate-300 rounded p-2 text-sm text-slate-900">
+          </div>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Insumo Fornecido</label>
+          <input type="text" id="inp-supp-item" placeholder="Ex: Aromas Naturais e Óleos Essenciais" class="w-full bg-white border border-slate-300 rounded p-2 text-sm text-slate-900">
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-3 border-t">
+        <button onclick="closeNewSupplierModal()" class="px-4 py-2 border rounded font-semibold text-xs text-slate-700">Cancelar</button>
+        <button onclick="saveNewSupplierModal()" class="px-5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded text-xs transition">
+          Salvar e Liberar para Auditoria IQF
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="kpi-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-white p-6 rounded-2xl max-w-md w-full shadow-2xl">
+      <h3 id="modal-kpi-title" class="text-base font-bold text-slate-900 mb-2">Letramento Técnico</h3>
+      <p id="modal-kpi-desc" class="text-sm text-slate-600 leading-relaxed"></p>
+      <button onclick="closeKpiModal()" class="mt-6 w-full bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold py-2.5 rounded-lg transition">
+        Entendido
+      </button>
+    </div>
+  </div>
+
+  <div id="history-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-white p-6 rounded-2xl max-w-lg w-full shadow-2xl space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <div>
+          <h3 id="hist-title" class="font-bold text-slate-900 text-base">Dossiê Legal do Fornecedor</h3>
+          <p class="text-xs text-slate-500">Documentação e evidências para composição do IQF</p>
+        </div>
+        <button onclick="closeHistoryModal()" class="text-slate-400 hover:text-slate-600">✕</button>
+      </div>
+      <div id="hist-content" class="text-sm text-slate-800 space-y-3 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-200"></div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeHistoryModal()" class="text-xs px-4 py-2 border rounded font-semibold text-slate-700">Fechar</button>
+        <button onclick="goToAuditFromHistory()" class="text-xs px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded">
+          Abrir Checklist de Auditoria IQF →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="audit-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-white p-6 rounded-2xl max-w-lg w-full shadow-2xl space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <div>
+          <h3 class="font-bold text-slate-900 text-base">Checklist de Auditoria Documental (IQF)</h3>
+          <p id="audit-supp-subtitle" class="text-xs text-slate-500"></p>
+        </div>
+        <button onclick="closeAuditModal()" class="text-slate-400 hover:text-slate-600">✕</button>
+      </div>
+      <p class="text-xs text-slate-500">
+        Assinale apenas os critérios comprovados no Dossiê Legal. Assinalar sem evidência acarreta apontamento de não conformidade.
+      </p>
+      <div class="space-y-3">
+        <label class="flex items-start gap-3 p-3 bg-white rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-50 transition">
+          <input type="checkbox" id="chk-alvara" onchange="calcAuditScore()" class="mt-0.5 rounded text-emerald-600">
+          <span class="text-xs text-slate-800 font-medium">Alvará Sanitário e Licença Ambiental Vigentes (+25 pts)</span>
+        </label>
+        <label class="flex items-start gap-3 p-3 bg-white rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-50 transition">
+          <input type="checkbox" id="chk-cnd" onchange="calcAuditScore()" class="mt-0.5 rounded text-emerald-600">
+          <span class="text-xs text-slate-800 font-medium">Certidão Negativa de Débitos (CND) e Regularidade Fiscal (+25 pts)</span>
+        </label>
+        <label class="flex items-start gap-3 p-3 bg-white rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-50 transition">
+          <input type="checkbox" id="chk-haccp" onchange="calcAuditScore()" class="mt-0.5 rounded text-emerald-600">
+          <span class="text-xs text-slate-800 font-medium">Certificação ISO 22000 / HACCP de Boas Práticas (+25 pts)</span>
+        </label>
+        <label class="flex items-start gap-3 p-3 bg-white rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-50 transition">
+          <input type="checkbox" id="chk-fin" onchange="calcAuditScore()" class="mt-0.5 rounded text-emerald-600">
+          <span class="text-xs text-slate-800 font-medium">Balanço Patrimonial e Capacidade Financeira aprovados (+25 pts)</span>
+        </label>
+      </div>
+      <div class="p-3 bg-slate-50 rounded-lg text-center border border-slate-200">
+        <span class="text-xs text-slate-500">Nota IQF Calculada:</span>
+        <p id="audit-score-val" class="text-2xl font-black text-emerald-700">0 / 100</p>
+      </div>
+      <button onclick="saveAuditIQF()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2.5 rounded-lg text-xs transition">
+        Concluir Auditoria e Salvar Avaliação
+      </button>
+    </div>
+  </div>
+
+  <div id="incoterm-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-white p-6 rounded-2xl max-w-xl w-full shadow-2xl space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <div>
+          <h3 class="font-bold text-slate-900 text-base">Matriz Prática de Incoterms 2020</h3>
+          <p class="text-xs text-slate-500">Responsabilidades de Frete, Seguro e Transferência de Risco</p>
+        </div>
+        <button onclick="closeIncotermGuide()" class="text-slate-400 hover:text-slate-600 text-lg">✕</button>
+      </div>
+      <div class="text-xs space-y-2 text-slate-700 overflow-x-auto">
+        <table class="w-full text-left border">
+          <thead class="bg-slate-100 text-xs uppercase text-slate-800 font-bold border-b">
+            <tr>
+              <th class="p-2.5 border">Termo</th>
+              <th class="p-2.5 border">Frete Principal</th>
+              <th class="p-2.5 border">Seguro</th>
+              <th class="p-2.5 border">Ponto Crítico de Risco</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y text-xs">
+            <tr>
+              <td class="p-2.5 font-bold text-blue-700 border">FOB (Free on Board)</td>
+              <td class="p-2.5 border">Comprador (NutriVita)</td>
+              <td class="p-2.5 border">Comprador</td>
+              <td class="p-2.5 border">Ao transpor a amurada do navio no porto de origem</td>
+            </tr>
+            <tr>
+              <td class="p-2.5 font-bold text-emerald-700 border">CIF (Cost, Ins. & Freight)</td>
+              <td class="p-2.5 border">Incluso pelo Vendedor</td>
+              <td class="p-2.5 border">Incluso pelo Vendedor</td>
+              <td class="p-2.5 border">No porto de destino (Brasil)</td>
+            </tr>
+            <tr>
+              <td class="p-2.5 font-bold text-purple-700 border">DDP (Delivered Duty Paid)</td>
+              <td class="p-2.5 border">Incluso pelo Vendedor</td>
+              <td class="p-2.5 border">Incluso pelo Vendedor</td>
+              <td class="p-2.5 border">Entregue na fábrica da NutriVita com impostos pagos</td>
+            </tr>
+            <tr>
+              <td class="p-2.5 font-bold text-amber-700 border">EXW (Ex Works)</td>
+              <td class="p-2.5 border">Comprador (NutriVita)</td>
+              <td class="p-2.5 border">Comprador</td>
+              <td class="p-2.5 border">No chão de fábrica do fornecedor no exterior</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button onclick="closeIncotermGuide()" class="w-full bg-slate-800 text-white text-xs font-bold py-2.5 rounded-lg">Entendido</button>
+    </div>
+  </div>
+
+  <div id="po-success-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-white p-6 rounded-2xl max-w-md w-full shadow-2xl text-center space-y-4">
+      <div class="w-14 h-14 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+      </div>
+      <div>
+        <h3 class="text-lg font-bold text-slate-900">Pedido de Compra Emitido!</h3>
+        <p id="po-success-protocol" class="text-xs font-mono font-bold text-emerald-800 mt-1">Protocolo: PO-2026-0042</p>
+      </div>
+      <p class="text-xs text-slate-600 leading-relaxed">
+        Uma via digital foi transmitida para o fornecedor. A resposta de confirmação de entrega já está sendo processada no Webmail corporativo.
+      </p>
+      <div class="pt-2">
+        <button onclick="closePoSuccessAndTrack()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold py-3 rounded-xl transition">
+          Acompanhar Carga na Torre de Follow-up →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MISSION CONTROL DO DOCENTE -->
+  <div id="mission-control" class="hidden fixed inset-y-0 right-0 w-full sm:w-[500px] bg-slate-900 text-white shadow-2xl p-6 overflow-y-auto custom-scroll z-50 border-l border-slate-700">
+    <div class="flex justify-between items-center mb-6 pb-4 border-b border-slate-800">
+      <div>
+        <h2 class="text-xl font-bold text-emerald-400">Mission Control (Docente)</h2>
+        <p class="text-xs text-slate-400">Painel do mediador pedagógico: ritmo de aula e gestão inbound.</p>
+      </div>
+      <button onclick="toggleMissionControl(false)" class="text-slate-400 hover:text-white text-lg">✕</button>
+    </div>
+
+    <div class="space-y-6">
+      <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+        <div class="flex justify-between items-center mb-2">
+          <h3 class="text-xs font-bold uppercase text-slate-200 tracking-wider">Avançar Carga Inbound (PO #0042)</h3>
+          <span class="text-xs text-amber-400 font-bold">Gatilho de Estoque</span>
+        </div>
+        <p class="text-xs text-slate-400 mb-3">
+          Avance o fluxo físico de recebimento da matéria-prima:
+        </p>
+        <div class="bg-slate-900 p-3 rounded-lg border border-slate-700 flex items-center justify-between">
+          <div>
+            <p class="font-bold text-slate-200 text-xs">PO #2026-0042 • Cacau Global</p>
+            <span id="mc-kb-stage" class="text-xs text-amber-300 font-bold block mt-0.5">Marco 1: Despachado Origem</span>
+          </div>
+          <button onclick="advanceKanbanManual()" id="mc-advance-btn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3.5 py-2 rounded text-xs transition shadow flex items-center gap-1">
+            Avançar Marco ➔
+          </button>
+        </div>
+        <button onclick="toggleInboundAutoTimer()" id="btn-toggle-auto-transit" class="mt-2.5 w-full py-1.5 px-3 bg-slate-700 hover:bg-slate-600 rounded text-xs text-slate-200 font-medium flex items-center justify-center gap-1.5 transition">
+          ⏱ Trânsito Automático: Ativo (35s)
+        </button>
+      </div>
+
+      <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+        <h3 class="text-xs font-bold uppercase text-slate-300 mb-3 tracking-wider">Disparar Demanda (RC) em Tempo Real</h3>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <button onclick="triggerRC('pcp')" class="bg-emerald-700 hover:bg-emerald-600 p-3 rounded-lg font-bold text-left">
+            <span>RC Matéria-Prima</span>
+            <span class="block text-xs text-emerald-200 font-normal mt-1">Cacau ou Whey</span>
+          </button>
+          <button onclick="triggerRC('mro')" class="bg-blue-700 hover:bg-blue-600 p-3 rounded-lg font-bold text-left">
+            <span>RC Indiretos (MRO)</span>
+            <span class="block text-xs text-blue-200 font-normal mt-1">Paletes ou Filme</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ESTADOS GLOBAIS E GESTÃO DE RCs
+    let currentTab = 0;
+    let kpis = { budget: 150000, saving: 14500, serviceLevel: 98, occupation: 45 };
+    let isMrpValidated = false;
+    let currentAuditTarget = 'vale';
+    let currentInboundStage = 1; // 1 a 5
+
+    // ESTRUTURA DINÂMICA DAS REQUISIÇÕES (RCs)
+    let requisitions = [
+      {
+        id: 'RC-101',
+        title: 'Massa de Cacau Fina 100%',
+        dept: 'Produção / PCP',
+        itemType: 'cacau',
+        qty: '1.000 kg',
+        urgency: 'Alta',
+        status: 'Pendente',
+        date: 'Hoje, 08:30',
+        activePo: null
+      },
+      {
+        id: 'RC-102',
+        title: 'Filme Stretch Automático 500mm',
+        dept: 'Logística / MRO',
+        itemType: 'filme',
+        qty: '80 bobinas',
+        urgency: 'Média',
+        status: 'Pendente',
+        date: 'Hoje, 09:15',
+        activePo: null
+      }
+    ];
+
+    let currentSelectedRc = requisitions[0];
+
+    // CONTEXTOS DE DIRETRIZES DA LINHA NO MRP
+    const MRP_CONTEXTS = {
+      cacau: {
+        title: 'Diretrizes da Linha: RC-101 • Massa de Cacau Fina 100% (PCP)',
+        desc: 'O departamento de Planejamento e Controle da Produção (PCP) solicita o lote para barras proteicas com os seguintes parâmetros diários:',
+        unit: 'kg',
+        cmRef: '100 kg / dia',
+        ltRef: '5 dias úteis',
+        recom: '📘 <strong>Recomendações Técnicas da NutriVita Foods:</strong><br>• Para resguardar a fábrica contra oscilações de consumo ou atrasos no transporte, o <em>Estoque Mínimo de Segurança (EMin)</em> recomendado equivale à cobertura de <strong>2 dias de produção</strong>.<br>• Para obter condições comerciais favoráveis e otimizar custos de frete, o <em>Lote de Reposição (Q)</em> padrão negociado equivale à cobertura de <strong>10 dias de produção</strong>.',
+        expected: { cm: 100, lt: 5, emin: 200, lote: 1000 }
+      },
+      filme: {
+        title: 'Diretrizes do Almoxarifado: RC-102 • Filme Stretch Automático (MRO)',
+        desc: 'O setor de paletização e embalagem informa o consumo diário de bobinas de filme stretch para fechar paletes de expedição:',
+        unit: 'bobinas',
+        cmRef: '8 bobinas / dia',
+        ltRef: '2 dias úteis',
+        recom: '📘 <strong>Recomendações Técnicas da NutriVita Foods:</strong><br>• Para evitar a paralisação do setor de expedição por falta de insumos de paletização, o <em>Estoque Mínimo de Segurança (EMin)</em> recomendado equivale à cobertura de <strong>3 dias de consumo</strong>.<br>• O pedido de reposição deve ser dimensionado para um <em>Lote de Compra (Q)</em> com cobertura de <strong>10 dias de consumo</strong>.',
+        expected: { cm: 8, lt: 2, emin: 24, lote: 80 }
+      }
+    };
+
+    const SUPPLIER_CATALOGS = {
+      'Cacau Global Corp': [
+        { sku: 'CAC-01', name: 'Cacau em Pó Alcalino 100%', price: 18.50, moq: 500 },
+        { sku: 'CAC-02', name: 'Manteiga de Cacau Desodorizada', price: 24.00, moq: 400 },
+        { sku: 'CAC-03', name: 'Massa de Cacau Fina 100%', price: 21.42, moq: 1000 },
+        { sku: 'CAC-04', name: 'Nibs de Cacau Orgânicos', price: 26.80, moq: 300 }
+      ],
+      'Vale Lácteos S/A': [
+        { sku: 'LAC-01', name: 'Caseinato de Cálcio 90%', price: 34.00, moq: 300 },
+        { sku: 'LAC-02', name: 'Leite em Pó Desnatado', price: 16.50, moq: 500 },
+        { sku: 'LAC-03', name: 'Soro de Leite em Pó Concentrado', price: 19.80, moq: 400 },
+        { sku: 'LAC-04', name: 'Whey Protein Concentrado 80%', price: 29.50, moq: 800 }
+      ],
+      'Polipack Embalagens': [
+        { sku: 'EMB-01', name: 'Filme Stretch Automático 500mm', price: 42.00, moq: 50 },
+        { sku: 'EMB-02', name: 'Filme Stretch Manual 25 micras', price: 38.00, moq: 40 },
+        { sku: 'EMB-03', name: 'Fita Adesiva Acrílica Transparente', price: 6.50, moq: 200 },
+        { sku: 'EMB-04', name: 'Fita de Arquear Poliéster 16mm', price: 85.00, moq: 20 }
+      ]
+    };
+
+    const KPI_INFO = {
+      budget: {
+        title: 'Orçamento Disponível (Budget de Compras)',
+        desc: 'Capital aprovado pela diretoria para compras no período. Toda emissão de PO deduz este valor. O analista deve garantir estoque sem estourar o teto financeiro.'
+      },
+      saving: {
+        title: 'Saving Acumulado (Economia Gerada)',
+        desc: 'Diferença entre o preço histórico/orçado e o valor final fechado na negociação com o fornecedor. Demonstra a geração de valor estratégico de Suprimentos.'
+      },
+      serviceLevel: {
+        title: 'Nível de Serviço (OTIF - On-Time In-Full)',
+        desc: 'Mede pontualidade e integridade das cargas recebidas. Meta corporativa: >= 95%.'
+      },
+      occupation: {
+        title: 'Taxa de Ocupação do Armazém',
+        desc: 'Volume físico ocupado no armazém da fábrica. Atualizado organicamente quando o pedido é liberado da Inspeção de Qualidade para o Estoque físico.'
+      }
+    };
+
+    const SUPPLIER_DOSSIERS = {
+      cacau: {
+        title: 'Dossiê Legal: Cacau Global Corp (Gana)',
+        content: `
+          <strong>Razão Social:</strong> Cacau Global Export Corp Ltd.<br>
+          <strong>Origem:</strong> Porto de Tema, Gana (Internacional).<br>
+          <strong>Situação Cadastral:</strong> Regularizada com Certificado de Exportação Internacional.<br>
+          <strong>Licenças Sanitárias:</strong> Possui Certificado Fitossanitário oficial e liberação Anvisa.<br>
+          <strong>Certificações de Qualidade:</strong> Possui Certificação ISO 22000 e FSSC 22000 vigentes.<br>
+          <strong>Capacidade Financeira:</strong> Balanço auditado pela KPMG com liquidez corrente de 2.1 (Excelente saúde financeira).
+        `
+      },
+      vale: {
+        title: 'Dossiê Legal: Vale Lácteos S/A (Brasil)',
+        content: `
+          <strong>Razão Social:</strong> Vale Lácteos Indústria de Derivados S/A.<br>
+          <strong>Origem:</strong> Pouso Alegre / MG (Nacional).<br>
+          <strong>Situação Fiscal:</strong> Certidão Negativa de Débitos (CND) emitida e regular.<br>
+          <strong>Licença Sanitária:</strong> Possui SIF (Serviço de Inspeção Federal) ativo sob número #3821.<br>
+          <strong>Certificações de Qualidade:</strong> Possui Boas Práticas de Fabricação (BPF), porém <u>NÃO possui certificação ISO 22000</u> (auditoria ainda em processo de implantação).<br>
+          <strong>Capacidade Financeira:</strong> Balanço aprovado com liquidez corrente de 1.4.
+        `
+      },
+      polipack: {
+        title: 'Dossiê Legal: Polipack Embalagens (Brasil)',
+        content: `
+          <strong>Razão Social:</strong> Polipack Indústria Plástica Ltda.<br>
+          <strong>Origem:</strong> Campinas / SP (Nacional).<br>
+          <strong>Situação Fiscal:</strong> CND Regular na Receita Federal.<br>
+          <strong>Alvará:</strong> Licença Ambiental da CETESB e Alvará de Funcionamento vigentes.<br>
+          <strong>Certificações de Qualidade:</strong> Possui ISO 9001 (Gestão da Qualidade geral), porém <u>NÃO possui ISO 22000</u>.<br>
+          <strong>Capacidade Financeira:</strong> Capital social integralizado de R$ 5M.
+        `
+      }
+    };
+
+    const TAB_NAMES = [
+      "0. Dossiê Inicial",
+      "1. Dashboard & RCs",
+      "2. Calculadora MRP",
+      "3. Homologação & IQF",
+      "4. Webmail Corporativo",
+      "5. Emissão de Pedidos (PO)",
+      "6. Torre de Follow-up"
+    ];
+
+    function switchTab(idx) {
+      for (let i = 0; i <= 6; i++) {
+        const sec = document.getElementById(`tab-${i}`);
+        const btn = document.getElementById(`tab-btn-${i}`);
+        if (sec) sec.classList.add('hidden');
+        if (btn) btn.className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left font-medium transition text-slate-700 hover:bg-slate-50 relative";
+      }
+      const activeSec = document.getElementById(`tab-${idx}`);
+      const activeBtn = document.getElementById(`tab-btn-${idx}`);
+      if (activeSec) activeSec.classList.remove('hidden');
+      if (activeBtn) activeBtn.className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left font-semibold transition bg-emerald-50 text-emerald-800 relative";
+      currentTab = idx;
+
+      // Atualiza o indicador do módulo ativo no cabeçalho
+      const headerTitle = document.getElementById('header-active-tab-title');
+      if (headerTitle) headerTitle.textContent = TAB_NAMES[idx] || `Módulo ${idx}`;
+
+      // Quando entra no Webmail, limpa badge de notificação e renderiza mensagens
+      if (idx === 4) {
+        const mailBadge = document.getElementById('nav-webmail-badge');
+        if (mailBadge) mailBadge.classList.add('hidden');
+        if (typeof renderEmailHistory === 'function') renderEmailHistory(selectedMailId);
+      }
+
+      // Quando entra na Torre de Follow-up, limpa badge de notificação
+      if (idx === 6) {
+        const fuBadge = document.getElementById('nav-followup-badge');
+        if (fuBadge) fuBadge.classList.add('hidden');
+      }
+    }
+
+    function toggleMissionControl(show) {
+      const mc = document.getElementById('mission-control');
+      if (show) mc.classList.remove('hidden');
+      else mc.classList.add('hidden');
+    }
+
+    function showKpiModal(key) {
+      document.getElementById('modal-kpi-title').textContent = KPI_INFO[key].title;
+      document.getElementById('modal-kpi-desc').textContent = KPI_INFO[key].desc;
+      document.getElementById('kpi-modal').classList.remove('hidden');
+    }
+
+    function closeKpiModal() {
+      document.getElementById('kpi-modal').classList.add('hidden');
+    }
+
+    // AJUSTE 2: RENDERIZAR RCs COM STATUS DINÂMICO NO DASHBOARD
+    function renderRequisitionsList() {
+      const container = document.getElementById('rc-list');
+      container.innerHTML = '';
+
+      let pendingCount = 0;
+
+      requisitions.forEach(rc => {
+        if (rc.status === 'Pendente' || rc.status.includes('Análise')) pendingCount++;
+
+        let badgeClass = 'bg-amber-100 text-amber-800';
+        if (rc.status.includes('PO Emitida')) badgeClass = 'bg-blue-100 text-blue-800';
+        if (rc.status.includes('Concluído')) badgeClass = 'bg-emerald-100 text-emerald-800';
+
+        const div = document.createElement('div');
+        div.className = "p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 hover:bg-slate-50 transition";
+        div.innerHTML = `
+          <div class="flex items-center gap-4">
+            <div class="p-2.5 ${rc.dept.includes('PCP') ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700'} rounded-lg shrink-0">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-sm text-slate-900">${rc.id}: ${rc.title}</span>
+                <span class="text-xs px-2 py-0.5 rounded font-bold ${rc.dept.includes('PCP') ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'}">${rc.dept}</span>
+                <span class="text-xs px-2.5 py-0.5 rounded-full font-bold ${badgeClass}">Status: ${rc.status}</span>
+              </div>
+              <p class="text-xs text-slate-500 mt-0.5">Demanda: <strong>${rc.qty}</strong> • ${rc.date}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 self-end sm:self-center">
+            <span class="text-xs font-semibold px-2.5 py-1 ${rc.urgency === 'Crítica' ? 'bg-purple-50 text-purple-700 border-purple-200' : (rc.urgency === 'Alta' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-amber-50 text-amber-700 border-amber-200')} border rounded">
+              Urgência: ${rc.urgency}
+            </span>
+            ${rc.status !== 'Atendido / Concluído ✓' ? `
+              <button onclick="startDimensioningRc('${rc.id}')" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-3.5 py-2 rounded-lg transition shadow-xs">
+                Dimensionar no MRP →
+              </button>
+            ` : `
+              <span class="text-xs text-emerald-700 font-bold px-3 py-1 bg-emerald-50 rounded border border-emerald-200">
+                Atendido em Estoque ✓
+              </span>
+            `}
+          </div>
+        `;
+        container.appendChild(div);
+      });
+
+      document.getElementById('rc-count-badge').textContent = `${pendingCount} Pendente${pendingCount !== 1 ? 's' : ''}`;
+    }
+
+    // AJUSTE 3: CONTEXTO DINÂMICO DO INSUMO NO MRP AO CLICAR NA RC
+    function startDimensioningRc(rcId) {
+      const rc = requisitions.find(r => r.id === rcId);
+      if (!rc) return;
+
+      currentSelectedRc = rc;
+      if (rc.status === 'Pendente') {
+        rc.status = 'Em Análise no MRP';
+        renderRequisitionsList();
+      }
+
+      // Atualiza textos do card no MRP
+      const ctx = MRP_CONTEXTS[rc.itemType] || MRP_CONTEXTS['cacau'];
+      document.getElementById('mrp-active-item-title').innerHTML = ctx.title;
+      document.getElementById('mrp-active-unit-badge').textContent = `Unidade: ${ctx.unit}`;
+      document.getElementById('mrp-active-desc').textContent = ctx.desc;
+      document.getElementById('mrp-disp-cm-ref').textContent = ctx.cmRef;
+      document.getElementById('mrp-disp-lt-ref').textContent = ctx.ltRef;
+      document.getElementById('mrp-recom-box').innerHTML = ctx.recom;
+
+      // Reseta inputs e validação do MRP
+      document.getElementById('mrp-cm').value = '';
+      document.getElementById('mrp-lt').value = '';
+      document.getElementById('mrp-emin').value = '';
+      document.getElementById('mrp-lote').value = '';
+      document.getElementById('disp-pp').textContent = `0 ${ctx.unit}`;
+      document.getElementById('disp-emax').textContent = `0 ${ctx.unit}`;
+      document.getElementById('mrp-validation-msg').textContent = '';
+
+      const btnNext = document.getElementById('btn-next-to-homolog');
+      btnNext.disabled = true;
+      btnNext.className = "bg-slate-300 text-slate-500 px-4 py-2 rounded-lg font-bold cursor-not-allowed";
+
+      onMrpInputChange();
+      switchTab(2);
+    }
+
+    // REATIVIDADE DO DENTE DE SERRA
+    function onMrpInputChange() {
+      const cm = Number(document.getElementById('mrp-cm').value) || 0;
+      const lt = Number(document.getElementById('mrp-lt').value) || 0;
+      const emin = Number(document.getElementById('mrp-emin').value) || 0;
+      const lote = Number(document.getElementById('mrp-lote').value) || 0;
+
+      const pp = (cm * lt) + emin;
+      const emax = emin + lote;
+      const unit = currentSelectedRc ? (MRP_CONTEXTS[currentSelectedRc.itemType]?.unit || 'un') : 'un';
+
+      document.getElementById('disp-pp').textContent = `${pp.toLocaleString('pt-BR')} ${unit}`;
+      document.getElementById('disp-emax').textContent = `${emax.toLocaleString('pt-BR')} ${unit}`;
+
+      document.getElementById('svg-emin-label').textContent = `EMin: ${emin}`;
+      document.getElementById('svg-pp-label').textContent = `PP: ${pp}`;
+      document.getElementById('svg-emax-label').textContent = `EMax: ${emax}`;
+
+      const maxScale = Math.max(emax * 1.15, 100);
+      const graphH = 170;
+      const getY = (val) => Math.max(30, Math.min(210, 210 - ((val / maxScale) * graphH)));
+
+      const yEmin = getY(emin);
+      const yPp = getY(pp);
+      const yEmax = getY(emax);
+
+      document.getElementById('svg-emin-line').setAttribute('y1', yEmin);
+      document.getElementById('svg-emin-line').setAttribute('y2', yEmin);
+      document.getElementById('svg-emin-rect').setAttribute('y', yEmin);
+      document.getElementById('svg-emin-rect').setAttribute('height', Math.max(0, 210 - yEmin));
+      document.getElementById('svg-emin-label').setAttribute('y', Math.max(20, yEmin + 4));
+
+      document.getElementById('svg-pp-line').setAttribute('y1', yPp);
+      document.getElementById('svg-pp-line').setAttribute('y2', yPp);
+      document.getElementById('svg-pp-label').setAttribute('y', Math.max(20, yPp + 4));
+
+      document.getElementById('svg-emax-line').setAttribute('y1', yEmax);
+      document.getElementById('svg-emax-line').setAttribute('y2', yEmax);
+      document.getElementById('svg-emax-label').setAttribute('y', Math.max(20, yEmax + 4));
+
+      document.getElementById('svg-poly-1').setAttribute('points', `40,${yEmax} 170,${yEmin}`);
+      document.getElementById('svg-rep-1').setAttribute('y1', yEmin);
+      document.getElementById('svg-rep-1').setAttribute('y2', yEmax);
+
+      document.getElementById('svg-poly-2').setAttribute('points', `170,${yEmax} 300,${yEmin}`);
+      document.getElementById('svg-rep-2').setAttribute('y1', yEmin);
+      document.getElementById('svg-rep-2').setAttribute('y2', yEmax);
+    }
+
+    function validateAndLockMRP() {
+      const cm = Number(document.getElementById('mrp-cm').value);
+      const lt = Number(document.getElementById('mrp-lt').value);
+      const emin = Number(document.getElementById('mrp-emin').value);
+      const lote = Number(document.getElementById('mrp-lote').value);
+
+      const msg = document.getElementById('mrp-validation-msg');
+      const btnNext = document.getElementById('btn-next-to-homolog');
+      const statusBadge = document.getElementById('mrp-lock-status');
+
+      const expected = (currentSelectedRc && MRP_CONTEXTS[currentSelectedRc.itemType]?.expected) || { cm: 100, lt: 5, emin: 200, lote: 1000 };
+
+      if (cm === expected.cm && lt === expected.lt && emin === expected.emin && lote === expected.lote) {
+        isMrpValidated = true;
+        msg.textContent = "✓ Dimensionamento validado com sucesso conforme as diretrizes corporativas!";
+        msg.className = "text-xs text-center font-bold text-emerald-700";
+        statusBadge.textContent = "Status: Aprovado pela Engenharia";
+        statusBadge.className = "text-xs font-bold px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded";
+
+        btnNext.disabled = false;
+        btnNext.className = "bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-lg font-bold transition shadow cursor-pointer";
+        
+        const pp = (cm * lt) + emin;
+        const emax = emin + lote;
+        const unit = currentSelectedRc ? (MRP_CONTEXTS[currentSelectedRc.itemType]?.unit || 'un') : 'un';
+        document.getElementById('mrp-next-hint').textContent = `Ponto de Pedido: ${pp} ${unit} | Estoque Máximo: ${emax} ${unit}. Trava liberada!`;
+
+        // Atualiza trilha pedagógica
+        document.getElementById('trail-progress-text').textContent = "Estágio 2 de 6 Concluído (MRP Validado)";
+        document.getElementById('trail-progress-bar').style.width = "33%";
+      } else {
+        isMrpValidated = false;
+        msg.textContent = "❌ Os valores informados divergem das recomendações técnicas. Revise as diretrizes na caixa azul.";
+        msg.className = "text-xs text-center font-bold text-red-600";
+        btnNext.disabled = true;
+        btnNext.className = "bg-slate-300 text-slate-500 px-4 py-2 rounded-lg font-bold cursor-not-allowed";
+      }
+    }
+
+    function goToHomologation() {
+      if (!isMrpValidated) return;
+      switchTab(3);
+    }
+
+    // AUDITORIA IQF E SELEÇÃO PARA WEBMAIL
+    function selectSupplierAndGoToMail(supplierName) {
+      document.getElementById('trail-progress-text').textContent = "Estágio 3 de 6 Concluído (Fornecedor Homologado)";
+      document.getElementById('trail-progress-bar').style.width = "50%";
+      switchTab(4);
+      selectEmail(1);
+    }
+
+    function openHistoryModal(key) {
+      currentAuditTarget = key;
+      const data = SUPPLIER_DOSSIERS[key];
+      document.getElementById('hist-title').textContent = data.title;
+      document.getElementById('hist-content').innerHTML = data.content;
+      document.getElementById('history-modal').classList.remove('hidden');
+    }
+
+    function closeHistoryModal() {
+      document.getElementById('history-modal').classList.add('hidden');
+    }
+
+    function goToAuditFromHistory() {
+      closeHistoryModal();
+      openAuditModal(currentAuditTarget);
+    }
+
+    function openAuditModal(key) {
+      currentAuditTarget = key;
+      const name = key === 'vale' ? 'Vale Lácteos S/A' : (key === 'cacau' ? 'Cacau Global Corp' : 'Polipack Embalagens');
+      document.getElementById('audit-supp-subtitle').textContent = `Auditoria Documental: ${name}`;
+      ['chk-alvara', 'chk-cnd', 'chk-haccp', 'chk-fin'].forEach(id => document.getElementById(id).checked = false);
+      calcAuditScore();
+      document.getElementById('audit-modal').classList.remove('hidden');
+    }
+
+    function closeAuditModal() {
+      document.getElementById('audit-modal').classList.add('hidden');
+    }
+
+    function calcAuditScore() {
+      const checks = ['chk-alvara', 'chk-cnd', 'chk-haccp', 'chk-fin'];
+      const score = checks.filter(id => document.getElementById(id).checked).length * 25;
+      document.getElementById('audit-score-val').textContent = `${score} / 100`;
+      return score;
+    }
+
+    function saveAuditIQF() {
+      const hasHaccp = document.getElementById('chk-haccp').checked;
+
+      if ((currentAuditTarget === 'vale' || currentAuditTarget === 'polipack') && hasHaccp) {
+        alert('⚠️ INCONSISTÊNCIA DOCUMENTAL DETECTADA!\n\nVocê assinalou que a empresa possui certificação ISO 22000 / HACCP. Contudo, o Dossiê Legal expressa com clareza que o fornecedor NÃO concluiu a auditoria da referida norma.\n\nEm uma auditoria de compliance corporativo, declarar conformidade sem evidência objetiva acarreta Não Conformidade Grave (NC) e invalidação do processo.\n\nPor favor, desmarque o item e proceda com rigor técnico.');
+        return;
+      }
+
+      const score = calcAuditScore();
+      closeAuditModal();
+
+      if (currentAuditTarget === 'vale') {
+        document.getElementById('vale-iqf-badge').textContent = `${score} / 100`;
+        const badge = document.getElementById('vale-status-badge');
+        const actionsCell = document.getElementById('cell-actions-vale');
+        if (score >= 75) {
+          badge.textContent = "Homologado com Ressalva";
+          badge.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800";
+          if (actionsCell) {
+            actionsCell.innerHTML = `
+              <button onclick="openHistoryModal('vale')" class="bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-bold px-3 py-1.5 rounded transition">Ler Dossiê</button>
+              <button onclick="selectSupplierAndGoToMail('Vale Lácteos S/A')" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-3 py-1.5 rounded transition shadow-xs">Selecionar e Negociar no Webmail →</button>
+            `;
+          }
+        } else {
+          badge.textContent = "Reprovado (IQF < 75)";
+          badge.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800";
+        }
+      }
+      alert(`Auditoria concluída com sucesso! Nota IQF registrada: ${score}/100.`);
+    }
+
+    function openNewSupplierModal() {
+      document.getElementById('new-supplier-modal').classList.remove('hidden');
+    }
+
+    function closeNewSupplierModal() {
+      document.getElementById('new-supplier-modal').classList.add('hidden');
+    }
+
+    function saveNewSupplierModal() {
+      const name = document.getElementById('inp-supp-name').value.trim();
+      const origin = document.getElementById('inp-supp-origin').value.trim() || 'Nacional';
+      const item = document.getElementById('inp-supp-item').value.trim() || 'Matéria-Prima';
+
+      if (!name) return alert('Por favor, informe a Razão Social.');
+
+      const tbody = document.getElementById('suppliers-tbody');
+      const tr = document.createElement('tr');
+      tr.className = "hover:bg-slate-50 transition";
+      tr.innerHTML = `
+        <td class="px-5 py-4 font-semibold text-slate-900">${name}</td>
+        <td class="px-5 py-4 text-xs text-slate-600">${origin}</td>
+        <td class="px-5 py-4 text-xs font-medium">${item}</td>
+        <td class="px-5 py-4 font-bold text-amber-700">0 / 100</td>
+        <td class="px-5 py-4"><span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">Auditoria Pendente</span></td>
+        <td class="px-5 py-4 text-right space-x-2">
+          <button onclick="alert('Dossiê cadastral preenchido pelo aluno no sistema.')" class="bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-bold px-3 py-1.5 rounded transition">Ler Dossiê</button>
+          <button onclick="openAuditModal('novo')" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-3 py-1.5 rounded transition shadow-xs">Auditar IQF</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+      closeNewSupplierModal();
+      alert(`Fornecedor ${name} cadastrado com sucesso!`);
+    }
+
+    // WEBMAIL CORPORATIVO COM PERSISTÊNCIA DE HISTÓRICO E CONTADOR ATIVO
+    const EMAILS_DATA = {
+      1: {
+        from: "Jean-Paul Mensah <comercial@cacauglobal.com>",
+        subject: "Proposta Comercial: Massa de Cacau Fina",
+        showRcBtn: false,
+        unread: false,
+        history: [],
+        body: `Prezado Analista Wesley Marcondes,
+
+Informamos nossa cotação oficial para o lote de 1.000 kg de Massa de Cacau Fina 100%:
+- Preço Unitário Base: US$ 4.20/kg
+- Modal: Marítimo com Incoterm FOB Porto de Tema (Gana)
+- Lead Time estimado: 5 dias úteis até o desembarque em Santos
+- Condição de pagamento: 30 dias DDL
+
+Caso deseje negociar a alteração do Incoterm para CIF ou desconto para fechamento imediato do pedido, favor responder este e-mail.
+
+Atenciosamente,
+<strong>Jean-Paul Mensah</strong>
+Gerente de Contas Internacionais | Cacau Global Export Corp
+Tema Port Office - Gana | Tel: +233 30 212 3456`
+      },
+      2: {
+        from: "Roberto Lima <roberto.pcp@nutrivitafoods.com.br>",
+        subject: "URGENTE: Solicitação de Compra de Cacau em Pó",
+        showRcBtn: true,
+        unread: false,
+        history: [],
+        body: `Prezado Wesley (Suprimentos),
+
+A linha de produção de achocolatados e barras proteicas teve um aumento de demanda de 25% para a campanha de fim de ano. 
+Nosso estoque de segurança cobrirá apenas mais 4 dias úteis.
+
+Solicito a emissão de uma Requisição de Compra (RC) emergencial de 2.500 kg de Cacau em Pó Alcalino 100% para não pararmos os turnos da próxima semana.
+
+Favor formalizar a RC no sistema assim que possível.
+
+Atenciosamente,
+<strong>Roberto Lima</strong>
+Coordenador de PCP | NutriVita Foods S/A
+Ramal Interno: 4120`
+      },
+      3: {
+        from: "Carlos Andrade <almoxarifado@nutrivitafoods.com.br>",
+        subject: "Estoque de Filme Stretch Crítico",
+        showRcBtn: false,
+        unread: false,
+        history: [],
+        body: `Olá Compras,
+
+Constatamos em inventário rotativo que restam somente 12 bobinas de filme stretch automático no setor de paletização.
+Favor providenciar a emissão de PO complementar com a Polipack para evitarmos gargalos na expedição.
+
+Atenciosamente,
+<strong>Carlos Andrade</strong>
+Líder de Almoxarifado Central | NutriVita Foods`
+      }
+    };
+
+    let selectedMailId = 1;
+    let webmailTimer = {
+      active: false,
+      mailId: null,
+      supplierName: '',
+      targetTimestamp: 0,
+      responseText: '',
+      deltaSaving: 0
+    };
+    let webmailIntervalId = null;
+
+    function renderEmailHistory(mailId) {
+      const hist = document.getElementById('mail-conversation-history');
+      if (!hist) return;
+      hist.innerHTML = '';
+      const email = EMAILS_DATA[mailId];
+      if (!email || !email.history || email.history.length === 0) return;
+
+      email.history.forEach(item => {
+        const div = document.createElement('div');
+        if (item.type === 'sent') {
+          div.className = "p-4 rounded-xl text-sm bg-white border border-slate-200 shadow-sm";
+          div.innerHTML = `
+            <div class="flex justify-between font-bold text-xs text-slate-700 mb-2 border-b pb-1">
+              <span>${item.sender}</span>
+              <span class="text-slate-400">${item.time}</span>
+            </div>
+            <p class="text-slate-900 whitespace-pre-line">${item.text}</p>
+            <div class="mt-3 pt-2 border-t border-slate-100 text-xs text-slate-500">
+              Atenciosamente,<br>
+              <strong>Wesley Marcondes</strong><br>
+              Analista de Suprimentos & Inbound Logistics | NutriVita Foods S/A
+            </div>
+          `;
+        } else {
+          div.className = "p-4 rounded-xl text-sm bg-white border border-emerald-200 shadow-sm";
+          div.innerHTML = `
+            <div class="flex justify-between font-bold text-xs text-slate-700 mb-2 border-b pb-1">
+              <span>${item.sender}</span>
+              <span class="text-slate-400">${item.time}</span>
+            </div>
+            <p class="text-slate-900 whitespace-pre-line leading-relaxed">${item.text}</p>
+          `;
+        }
+        hist.appendChild(div);
+      });
+    }
+
+    function selectEmail(id) {
+      selectedMailId = id;
+      for (let i = 1; i <= 3; i++) {
+        const item = document.getElementById(`mail-item-${i}`);
+        if (item) item.className = i === id ? "p-3.5 cursor-pointer bg-emerald-50/90 border-l-4 border-emerald-600" : "p-3.5 cursor-pointer hover:bg-slate-100";
+      }
+      const data = EMAILS_DATA[id];
+      document.getElementById('mail-view-subject').textContent = data.subject;
+      document.getElementById('mail-view-from').innerHTML = `De: <strong>${data.from}</strong>`;
+      document.getElementById('mail-view-body').innerHTML = data.body;
+      
+      // Renderiza histórico persistido deste e-mail
+      renderEmailHistory(id);
+
+      // Atualiza estado do indicador se houver resposta pendente para este e-mail
+      const indicator = document.getElementById('mail-typing-indicator');
+      const btnSend = document.getElementById('btn-send-mail');
+      if (webmailTimer.active && webmailTimer.mailId === id) {
+        if (indicator) indicator.classList.remove('hidden');
+        if (btnSend) btnSend.disabled = true;
+        const secondsLeft = Math.max(0, Math.ceil((webmailTimer.targetTimestamp - Date.now()) / 1000));
+        const typingText = document.getElementById('mail-typing-text');
+        if (typingText) typingText.textContent = `O remetente está analisando sua proposta comercial (resposta prevista em ~${secondsLeft}s)...`;
+      } else {
+        if (indicator) indicator.classList.add('hidden');
+        if (btnSend) btnSend.disabled = false;
+      }
+
+      const rcBtn = document.getElementById('btn-create-rc-container');
+      if (data.showRcBtn) rcBtn.classList.remove('hidden');
+      else rcBtn.classList.add('hidden');
+    }
+
+    function createRcFromEmail() {
+      const newRc = {
+        id: `RC-103`,
+        title: 'Cacau em Pó Alcalino 100%',
+        dept: 'Produção / PCP',
+        itemType: 'cacau',
+        qty: '2.500 kg',
+        urgency: 'Crítica',
+        status: 'Pendente',
+        date: 'Hoje, Agora',
+        activePo: null
+      };
+
+      requisitions.unshift(newRc);
+      renderRequisitionsList();
+
+      alert('✓ Requisição de Compra (RC-103) gerada com sucesso e inserida na Caixa de Entrada do Dashboard!');
+      switchTab(1);
+    }
+
+    function startWebmailTicker() {
+      if (webmailIntervalId) clearInterval(webmailIntervalId);
+
+      webmailIntervalId = setInterval(() => {
+        if (!webmailTimer.active) {
+          clearInterval(webmailIntervalId);
+          webmailIntervalId = null;
+          return;
+        }
+
+        const now = Date.now();
+        const secondsLeft = Math.max(0, Math.ceil((webmailTimer.targetTimestamp - now) / 1000));
+
+        // Atualiza interface caso o aluno esteja na aba de Webmail e visualizando este e-mail
+        if (currentTab === 4 && selectedMailId === webmailTimer.mailId) {
+          const indicator = document.getElementById('mail-typing-indicator');
+          const typingText = document.getElementById('mail-typing-text');
+          const btnSend = document.getElementById('btn-send-mail');
+          if (indicator) indicator.classList.remove('hidden');
+          if (btnSend) btnSend.disabled = true;
+          if (typingText) typingText.textContent = `O remetente está analisando sua proposta comercial (resposta prevista em ~${secondsLeft}s)...`;
+        }
+
+        // Conclusão da resposta da IA/Fornecedor
+        if (secondsLeft <= 0) {
+          clearInterval(webmailIntervalId);
+          webmailIntervalId = null;
+
+          const targetEmail = EMAILS_DATA[webmailTimer.mailId];
+          if (targetEmail) {
+            if (!targetEmail.history) targetEmail.history = [];
+            targetEmail.history.push({
+              type: 'received',
+              sender: webmailTimer.supplierName,
+              time: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
+              text: webmailTimer.responseText
+            });
+
+            if (webmailTimer.deltaSaving > 0) {
+              kpis.saving += webmailTimer.deltaSaving;
+              const savingVal = document.getElementById('kpi-saving-val');
+              if (savingVal) savingVal.textContent = `R$ ${kpis.saving.toLocaleString('pt-BR')}`;
+            }
+          }
+
+          // Se o aluno está exatamente na tela deste e-mail agora
+          if (currentTab === 4 && selectedMailId === webmailTimer.mailId) {
+            const indicator = document.getElementById('mail-typing-indicator');
+            const btnSend = document.getElementById('btn-send-mail');
+            if (indicator) indicator.classList.add('hidden');
+            if (btnSend) btnSend.disabled = false;
+            renderEmailHistory(webmailTimer.mailId);
+          } else {
+            // Notificação em segundo plano e badge pulsante na sidebar
+            showLogisticsToast(`📧 Nova resposta recebida de ${webmailTimer.supplierName}!`);
+            const navBadge = document.getElementById('nav-webmail-badge');
+            if (navBadge) navBadge.classList.remove('hidden');
+          }
+
+          webmailTimer.active = false;
+        }
+      }, 1000);
+    }
+
+    function sendMailReply() {
+      const input = document.getElementById('mail-reply-text');
+      const text = input.value.trim();
+      if (!text) return alert('Por favor, redija uma resposta.');
+
+      if (webmailTimer.active && webmailTimer.mailId === selectedMailId) {
+        return alert('Aguarde a resposta do remetente para a mensagem anterior antes de enviar nova réplica.');
+      }
+
+      const email = EMAILS_DATA[selectedMailId];
+      if (!email.history) email.history = [];
+
+      // Registra mensagem no histórico persistente do e-mail
+      email.history.push({
+        type: 'sent',
+        sender: 'Wesley Marcondes (NutriVita Compras)',
+        time: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
+        text: text
+      });
+
+      renderEmailHistory(selectedMailId);
+      input.value = '';
+
+      // Atualiza trilha pedagógica
+      document.getElementById('trail-progress-text').textContent = "Estágio 4 de 6 Concluído (Negociação no Webmail Realizada)";
+      document.getElementById('trail-progress-bar').style.width = "66%";
+
+      // Tempo de espera humanizado e randômico (8s a 15s)
+      const waitSeconds = Math.floor(Math.random() * 8) + 8;
+      const targetTime = Date.now() + (waitSeconds * 1000);
+
+      let supplierName = "Cacau Global Export Corp";
+      let responseText = "";
+      let deltaSaving = 0;
+
+      if (selectedMailId === 1) {
+        supplierName = "Jean-Paul Mensah (Cacau Global)";
+        responseText = `Prezado Wesley,\n\nAgradecemos sua contraproposta técnica. Analisamos com a diretoria comercial e aceitamos conceder 3.5% de desconto no lote ou assumir parte das taxas portuárias. O prazo de entrega de 5 dias úteis permanece garantido após a emissão da PO oficial.\n\nAtenciosamente,\n<strong>Jean-Paul Mensah</strong>\nCacau Global Export Corp`;
+        deltaSaving = 1200;
+      } else if (selectedMailId === 2) {
+        supplierName = "Roberto Lima (PCP)";
+        responseText = `Wesley, obrigado pelo retorno imediato! O alinhamento dos prazos salvou o planejamento do turno.\n\nAtenciosamente,\n<strong>Roberto Lima</strong>\nCoordenador de PCP`;
+      } else {
+        supplierName = "Carlos Andrade (Almoxarifado)";
+        responseText = `Confirmado! O setor de embalagens já iniciou a separação preventiva do lote.\n\nAtenciosamente,\n<strong>Carlos Andrade</strong>\nAlmoxarifado`;
+      }
+
+      webmailTimer = {
+        active: true,
+        mailId: selectedMailId,
+        supplierName: supplierName,
+        targetTimestamp: targetTime,
+        responseText: responseText,
+        deltaSaving: deltaSaving
+      };
+
+      const indicator = document.getElementById('mail-typing-indicator');
+      const btnSend = document.getElementById('btn-send-mail');
+      if (indicator) indicator.classList.remove('hidden');
+      if (btnSend) btnSend.disabled = true;
+
+      startWebmailTicker();
+    }
+
+    // EMISSÃO DE PO E ATUALIZAÇÃO DA RC
+    function onSupplierChangeInPO() {
+      const select = document.getElementById('po-supplier-select');
+      const val = select.value;
+
+      document.getElementById('po-highlight-name').textContent = val;
+
+      if (val === 'Cacau Global Corp') {
+        document.getElementById('po-highlight-details').innerHTML = 'CNPJ/Tax ID: <strong>00.123.456/0001-89</strong> • Origem: <strong>Gana (Internacional)</strong> • IQF: <strong>100/100</strong>';
+      } else if (val === 'Vale Lácteos S/A') {
+        document.getElementById('po-highlight-details').innerHTML = 'CNPJ: <strong>12.345.678/0001-90</strong> • Origem: <strong>Minas Gerais (Brasil)</strong> • IQF: <strong>Homologado</strong>';
+      } else {
+        document.getElementById('po-highlight-details').innerHTML = 'CNPJ: <strong>98.765.432/0001-11</strong> • Origem: <strong>São Paulo (Brasil)</strong> • IQF: <strong>75/100</strong>';
+      }
+
+      renderCatalogItems();
+    }
+
+    function renderCatalogItems() {
+      const sup = document.getElementById('po-supplier-select').value;
+      const items = (SUPPLIER_CATALOGS[sup] || []).slice().sort((a, b) => a.name.localeCompare(b.name));
+      const container = document.getElementById('catalog-items-list');
+      container.innerHTML = '';
+
+      items.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = `p-3 rounded-lg border cursor-pointer transition flex justify-between items-center ${index === 0 ? 'bg-emerald-50 border-emerald-400' : 'bg-white border-slate-200 hover:bg-slate-50'}`;
+        div.onclick = () => selectCatalogItem(item, div);
+        div.innerHTML = `
+          <div>
+            <span class="font-bold text-slate-900 block">${item.name}</span>
+            <span class="text-xs text-slate-500">SKU: ${item.sku} • Lote Mínimo (MOQ): ${item.moq} un</span>
+          </div>
+          <strong class="text-emerald-700 text-sm">R$ ${item.price.toFixed(2)}</strong>
+        `;
+        container.appendChild(div);
+
+        if (index === 0) selectCatalogItem(item, div);
+      });
+    }
+
+    function selectCatalogItem(item, elem) {
+      document.querySelectorAll('#catalog-items-list > div').forEach(d => {
+        d.className = 'p-3 rounded-lg border cursor-pointer transition flex justify-between items-center bg-white border-slate-200 hover:bg-slate-50';
+      });
+      elem.className = 'p-3 rounded-lg border cursor-pointer transition flex justify-between items-center bg-emerald-50 border-emerald-400 shadow-xs';
+
+      document.getElementById('po-item-selected').value = item.name;
+      document.getElementById('po-price').value = item.price.toFixed(2);
+      updatePoCalculations();
+    }
+
+    function filterCatalogItems() {
+      const q = document.getElementById('catalog-search').value.toLowerCase();
+      document.querySelectorAll('#catalog-items-list > div').forEach(div => {
+        const text = div.textContent.toLowerCase();
+        if (text.includes(q)) div.classList.remove('hidden');
+        else div.classList.add('hidden');
+      });
+    }
+
+    function updatePoCalculations() {
+      const modal = document.getElementById('po-modal').value;
+      const incoterm = document.getElementById('po-incoterm').value;
+      const qty = Number(document.getElementById('po-qty').value) || 1000;
+      let price = Number(document.getElementById('po-price').value) || 21.42;
+
+      let freightPerUnit = 0;
+      let insurancePerUnit = 0;
+      let etaDays = "5 dias úteis";
+
+      if (modal === 'Marítimo') {
+        freightPerUnit = (incoterm === 'CIF' || incoterm === 'DDP') ? 0 : 3.80;
+        insurancePerUnit = (incoterm === 'CIF' || incoterm === 'DDP') ? 0 : 0.90;
+        etaDays = "5 a 7 dias úteis";
+      } else if (modal === 'Rodoviário') {
+        freightPerUnit = (incoterm === 'CIF' || incoterm === 'DDP') ? 0 : 1.80;
+        insurancePerUnit = 0.30;
+        etaDays = "2 a 3 dias úteis";
+      } else if (modal === 'Aéreo') {
+        freightPerUnit = (incoterm === 'CIF' || incoterm === 'DDP') ? 0 : 12.50;
+        insurancePerUnit = 1.90;
+        etaDays = "1 a 2 dias úteis (Expresso)";
+      }
+
+      document.getElementById('po-disp-freight').value = freightPerUnit === 0 ? "Incluso no Preço (CIF/DDP)" : `R$ ${freightPerUnit.toFixed(2)} / un`;
+      document.getElementById('po-disp-insurance').value = insurancePerUnit === 0 ? "Incluso no Preço" : `R$ ${insurancePerUnit.toFixed(2)} / un`;
+      document.getElementById('po-disp-eta').value = etaDays;
+
+      const totalOrder = (price * qty) + ((freightPerUnit + insurancePerUnit) * qty);
+      document.getElementById('po-disp-total').textContent = `R$ ${totalOrder.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    }
+
+    function openIncotermGuide() {
+      document.getElementById('incoterm-modal').classList.remove('hidden');
+    }
+
+    function closeIncotermGuide() {
+      document.getElementById('incoterm-modal').classList.add('hidden');
+    }
+
+    function handleEmitPO(e) {
+      e.preventDefault();
+      const btn = document.getElementById('po-submit-btn');
+      btn.disabled = true;
+      btn.innerHTML = "Emitindo Ordem...";
+
+      setTimeout(() => {
+        kpis.budget = Math.max(0, kpis.budget - 26120);
+        document.getElementById('kpi-budget-val').textContent = `R$ ${kpis.budget.toLocaleString('pt-BR')}`;
+        document.getElementById('po-success-modal').classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerHTML = "Transmitir Pedido de Compra (PO)";
+
+        // Atualiza a RC correspondente no Dashboard
+        if (currentSelectedRc) {
+          currentSelectedRc.status = 'PO-2026-0042 Emitida';
+          renderRequisitionsList();
+        }
+
+        // Atualiza trilha pedagógica
+        document.getElementById('trail-progress-text').textContent = "Estágio 5 de 6 Concluído (PO Emitida)";
+        document.getElementById('trail-progress-bar').style.width = "83%";
+      }, 500);
+    }
+
+    function closePoSuccessAndTrack() {
+      document.getElementById('po-success-modal').classList.add('hidden');
+      switchTab(6);
+    }
+
+    // AJUSTE 4: NOTIFICAÇÃO E VISIBILIDADE DO AVANÇO INBOUND COM TIMER ORGÂNICO PERSISTENTE
+    let inboundTimerState = {
+      secondsLeft: 35,
+      intervalId: null,
+      autoAdvance: true
+    };
+
+    function startInboundAutoTimer() {
+      if (inboundTimerState.intervalId) clearInterval(inboundTimerState.intervalId);
+
+      inboundTimerState.intervalId = setInterval(() => {
+        if (!inboundTimerState.autoAdvance || currentInboundStage >= 5) {
+          const badge = document.getElementById('inbound-countdown-display');
+          if (badge) badge.textContent = currentInboundStage >= 5 ? "Carga Guardada ✓" : "Pausado";
+          return;
+        }
+
+        inboundTimerState.secondsLeft--;
+        const badge = document.getElementById('inbound-countdown-display');
+        if (badge) badge.textContent = `${inboundTimerState.secondsLeft}s`;
+
+        if (inboundTimerState.secondsLeft <= 0) {
+          inboundTimerState.secondsLeft = 35;
+          if (currentInboundStage < 5) {
+            advanceKanbanInternal();
+          }
+        }
+      }, 1000);
+    }
+
+    function toggleInboundAutoTimer() {
+      inboundTimerState.autoAdvance = !inboundTimerState.autoAdvance;
+      const btn = document.getElementById('btn-toggle-auto-transit');
+      if (btn) {
+        btn.textContent = inboundTimerState.autoAdvance ? "⏱ Trânsito Automático: Ativo (35s)" : "⏸ Trânsito Automático: Pausado";
+        btn.className = inboundTimerState.autoAdvance ? "mt-2.5 w-full py-1.5 px-3 bg-slate-700 hover:bg-slate-600 rounded text-xs text-slate-200 font-medium flex items-center justify-center gap-1.5 transition" : "mt-2.5 w-full py-1.5 px-3 bg-amber-900/60 hover:bg-amber-800 text-amber-200 rounded text-xs font-medium flex items-center justify-center gap-1.5 transition";
+      }
+    }
+
+    function advanceKanbanManual() {
+      if (currentInboundStage < 5) {
+        inboundTimerState.secondsLeft = 35;
+        advanceKanbanInternal();
+      } else {
+        alert('A carga já foi totalmente estocada no armazém da fábrica!');
+      }
+    }
+
+    function advanceKanbanInternal() {
+      if (currentInboundStage < 5) {
+        currentInboundStage++;
+        updateInboundVisuals();
+      }
+    }
+
+    function updateInboundVisuals() {
+      const mcStage = document.getElementById('mc-kb-stage');
+      const advanceBtn = document.getElementById('mc-advance-btn');
+      const orderBadge = document.getElementById('order-1-badge');
+
+      const stageLabels = [
+        "",
+        "Marco 1: Despachado Origem",
+        "Marco 2: Em Trânsito Marítimo",
+        "Marco 3: Portaria / Descarga",
+        "Marco 4: Laudo de CQ",
+        "Marco 5: Guardado no Estoque ✓"
+      ];
+
+      const stageDesc = [
+        "",
+        "Carga despachada no porto de Tema.",
+        "Navio em alto-mar navegando rumo ao Porto de Santos.",
+        "Caminhão atracou na portaria de Extrema/MG para descarga.",
+        "Amostras coletadas pelo laboratório de Controle de Qualidade (CQ).",
+        "Laudo de CQ APROVADO! Lote guardado no armazém da fábrica."
+      ];
+
+      if (mcStage) mcStage.textContent = stageLabels[currentInboundStage];
+      if (orderBadge) orderBadge.textContent = stageLabels[currentInboundStage];
+
+      for (let i = 1; i <= 5; i++) {
+        const step = document.getElementById(`p1-s${i}`);
+        if (!step) continue;
+
+        if (i < currentInboundStage) {
+          step.className = "p-3 rounded-xl bg-emerald-50 text-emerald-800 font-bold border border-emerald-200";
+          step.querySelector('span').textContent = "Concluído ✓";
+        } else if (i === currentInboundStage) {
+          step.className = "p-3 rounded-xl bg-emerald-100 text-emerald-900 font-bold border-2 border-emerald-500 shadow-xs";
+          step.querySelector('span').textContent = "Em Andamento...";
+        } else {
+          step.className = "p-3 rounded-xl bg-slate-50 text-slate-400 border border-slate-200";
+          step.querySelector('span').textContent = "Pendente";
+        }
+      }
+
+      // Adiciona nota no Diário de Bordo
+      const notesContainer = document.getElementById('order-1-notes');
+      if (notesContainer) {
+        const noteP = document.createElement('p');
+        noteP.className = "p-2 bg-white rounded border border-slate-200";
+        noteP.textContent = `[Hoje, ${new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}] ${stageLabels[currentInboundStage]}: ${stageDesc[currentInboundStage]}`;
+        notesContainer.appendChild(noteP);
+      }
+
+      // Dispara Toast de Notificação para o Aluno
+      showLogisticsToast(`Pedido PO #2026-0042 avançou: ${stageLabels[currentInboundStage]}! ${stageDesc[currentInboundStage]}`);
+
+      // Ativa o badge pulsante no menu lateral caso o aluno esteja em outra aba
+      const navBadge = document.getElementById('nav-followup-badge');
+      if (currentTab !== 6 && navBadge) navBadge.classList.remove('hidden');
+
+      if (currentInboundStage === 5) {
+        if (inboundTimerState.intervalId) {
+          clearInterval(inboundTimerState.intervalId);
+          inboundTimerState.intervalId = null;
+        }
+        const badgeDisplay = document.getElementById('inbound-countdown-display');
+        if (badgeDisplay) badgeDisplay.textContent = "Carga Guardada ✓";
+
+        kpis.occupation = Math.min(100, kpis.occupation + 12);
+        const occElem = document.getElementById('kpi-occupation-val');
+        if (occElem) occElem.textContent = `${kpis.occupation}%`;
+
+        // Marca a RC-101 como Atendido / Concluído
+        const cacauRc = requisitions.find(r => r.itemType === 'cacau');
+        if (cacauRc) {
+          cacauRc.status = 'Atendido / Concluído ✓';
+          renderRequisitionsList();
+        }
+
+        // Conclui trilha de aprendizagem
+        const trailText = document.getElementById('trail-progress-text');
+        const trailBar = document.getElementById('trail-progress-bar');
+        if (trailText) trailText.textContent = "Estágio 6 de 6 Concluído (Mercadoria em Estoque!)";
+        if (trailBar) trailBar.style.width = "100%";
+
+        if (advanceBtn) {
+          advanceBtn.disabled = true;
+          advanceBtn.className = "bg-slate-700 text-slate-400 font-bold px-3.5 py-2 rounded text-xs cursor-not-allowed";
+          advanceBtn.textContent = "Concluído ✓";
+        }
+      }
+    }
+
+    function showLogisticsToast(msg) {
+      const toast = document.getElementById('logistics-toast');
+      const toastMsg = document.getElementById('logistics-toast-msg');
+      if (toastMsg) toastMsg.textContent = msg;
+      if (toast) toast.classList.remove('hidden');
+    }
+
+    function dismissLogisticsToast() {
+      const toast = document.getElementById('logistics-toast');
+      if (toast) toast.classList.add('hidden');
+    }
+
+    function goToFollowupFromToast() {
+      dismissLogisticsToast();
+      const navBadge = document.getElementById('nav-followup-badge');
+      if (navBadge) navBadge.classList.add('hidden');
+      switchTab(6);
+    }
+
+    function filterFollowupOrders(val) {
+      alert(`Filtro de visualização da Torre Inbound aplicado: ${val}`);
+    }
+
+    function triggerRC(type) {
+      const isPcp = type === 'pcp';
+      const id = `RC-${Math.floor(200 + Math.random() * 800)}`;
+      const title = isPcp ? 'Cacau em Pó Alcalino Premium' : 'Paletes PBR Madeira Tratada';
+      const label = isPcp ? 'Produção / PCP' : 'Logística / MRO';
+      const qty = isPcp ? '2.500 kg' : '150 un';
+
+      const newRc = {
+        id: id,
+        title: title,
+        dept: label,
+        itemType: isPcp ? 'cacau' : 'filme',
+        qty: qty,
+        urgency: 'Alta',
+        status: 'Pendente',
+        date: 'Hoje, Agora',
+        activePo: null
+      };
+
+      requisitions.unshift(newRc);
+      renderRequisitionsList();
+      alert(`[Mission Control] Nova demanda (${label}) disparada com sucesso!`);
+    }
+
+    // INICIALIZAÇÃO
+    renderRequisitionsList();
+    renderCatalogItems();
+    onMrpInputChange();
+    startInboundAutoTimer();
+  </script>
+</body>
+</html>
